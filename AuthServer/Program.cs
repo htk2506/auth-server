@@ -1,5 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using AuthServer.Data;
+using Microsoft.AspNetCore.Identity;
+using AuthServer.Data.Models;
 
 // Build the app
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +11,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("Database"));
 });
+builder.Services.AddSingleton<PasswordHasher<User>>();
 var app = builder.Build();
 
 // Configure the app
