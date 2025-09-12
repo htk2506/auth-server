@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using AuthServer.Data;
+using AuthServer.Database;
 using Microsoft.AspNetCore.Identity;
-using AuthServer.Data.Models;
+using AuthServer.Database.Models;
 
 // Build the app
 var builder = WebApplication.CreateBuilder(args);

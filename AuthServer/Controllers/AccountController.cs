@@ -1,9 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using AuthServer.Dto;
-using AuthServer.Data;
-using AuthServer.Data.Models;
 using AuthServer.Helpers;
 using Microsoft.AspNetCore.Identity;
+using AuthServer.Database.Models;
+using AuthServer.Database;
 
 namespace AuthServer.Controllers
 {

@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
-namespace AuthServer.Data.Models
+namespace AuthServer.Database.Models
 {
     [Index(nameof(Username), IsUnique = true)]
     public class User
