@@ -30,7 +30,7 @@ namespace AuthServer.Controllers
                 User user = new User
                 {
                     Username = requestBody.Username.ToLower(),
-                    Notes = requestBody.Notes ?? "",
+                    Note = requestBody.Note ?? "",
                 };
                 user.PasswordHash = _passwordHasher.HashPassword(user, requestBody.Password);
 

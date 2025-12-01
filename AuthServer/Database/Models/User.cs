@@ -16,6 +16,6 @@ namespace AuthServer.Database.Models
         [Required]
         public string PasswordHash { get; set; } = null!;
 
-        public string Notes { get; set; } = string.Empty;
+        public string Note { get; set; } = string.Empty;
     }
 }

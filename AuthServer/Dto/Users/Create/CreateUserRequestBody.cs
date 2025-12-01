@@ -11,6 +11,6 @@ namespace AuthServer.Dto.Users.Create
         [Required]
         public required string Password { get; set; }
 
-        public string? Notes { get; set; }
+        public string? Note { get; set; }
     }
 }

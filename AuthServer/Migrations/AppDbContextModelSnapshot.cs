@@ -29,10 +29,10 @@ namespace AuthServer.Migrations
                         .HasColumnType("uuid")
                         .HasColumnName("id");
 
-                    b.Property<string>("Notes")
+                    b.Property<string>("Note")
                         .IsRequired()
                         .HasColumnType("text")
-                        .HasColumnName("notes");
+                        .HasColumnName("note");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
