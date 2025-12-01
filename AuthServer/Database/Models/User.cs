@@ -13,7 +13,8 @@ namespace AuthServer.Database.Models
         [RegularExpression(@"^[a-z\d]+$")]
         public string Username { get; set; } = null!;
 
-        public string PasswordHash { get; set; } = string.Empty;
+        [Required]
+        public string PasswordHash { get; set; } = null!;
 
         public string Notes { get; set; } = string.Empty;
     }

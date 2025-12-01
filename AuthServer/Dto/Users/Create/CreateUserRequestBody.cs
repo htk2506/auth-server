@@ -1,13 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace AuthServer.Dto
+namespace AuthServer.Dto.Users.Create
 {
-    public class RegisterUserRequest
+    public class CreateUserRequestBody
     {
-        [Required]
+        [RegularExpression(@"^[a-z\d]+$")]
         public required string Username { get; set; }
 
-        [Required]
+        [MinLength(1, ErrorMessage = "Missing password")]
         public required string Password { get; set; }
 
         public string? Notes { get; set; }
