@@ -7,8 +7,8 @@ using AuthServer.Dto.Users.Create;
 
 namespace AuthServer.Controllers
 {
-    [Route("[controller]")]
     [ApiController]
+    [Route("[controller]")]
     public class UsersController : ControllerBase
     {
         private readonly AppDbContext _dbContext;
