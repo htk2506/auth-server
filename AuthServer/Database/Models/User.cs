@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.EntityFrameworkCore;
 
-namespace AuthServer.Data.Models
+namespace AuthServer.Database.Models
 {
     [Index(nameof(Username), IsUnique = true)]
     public class User
@@ -10,10 +10,11 @@ namespace AuthServer.Data.Models
         public Guid Id { get; set; }
 
         [Required]
-        [RegularExpression(@"^[a-z\d]+$")]
+        [RegularExpression(@"^[a-z\d]{1,254}$")]
         public string Username { get; set; } = null!;
 
-        public string PasswordHash { get; set; } = string.Empty;
+        [Required]
+        public string PasswordHash { get; set; } = null!;
 
         public string Notes { get; set; } = string.Empty;
     }

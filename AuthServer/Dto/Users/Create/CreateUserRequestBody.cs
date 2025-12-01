@@ -1,10 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace AuthServer.Dto
+namespace AuthServer.Dto.Users.Create
 {
-    public class RegisterUserRequest
+    public class CreateUserRequestBody
     {
         [Required]
+        [RegularExpression(@"^[a-z\d]{1,254}$")]
         public required string Username { get; set; }
 
         [Required]

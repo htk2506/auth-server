@@ -1,2 +1,2 @@
 # auth-server
-Implementing an authentication server that uses JWT
+Implementing a simple authentication server.
