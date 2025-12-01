@@ -4,10 +4,11 @@ namespace AuthServer.Dto.Users.Create
 {
     public class CreateUserRequestBody
     {
-        [RegularExpression(@"^[a-z\d]+$")]
+        [Required]
+        [RegularExpression(@"^[a-z\d]{1,254}$")]
         public required string Username { get; set; }
 
-        [MinLength(1, ErrorMessage = "Missing password")]
+        [Required]
         public required string Password { get; set; }
 
         public string? Notes { get; set; }
