@@ -2,6 +2,6 @@
 {
     public class LoginUserResponseBody
     {
-        public string SessionToken = null!;
+        public string SessionToken { get; set; } = null!;
     }
 }
