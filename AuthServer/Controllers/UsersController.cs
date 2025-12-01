@@ -21,7 +21,7 @@ namespace AuthServer.Controllers
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(CreateUserResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CreateUserResponseBody), StatusCodes.Status200OK)]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserRequestBody requestBody)
         {
             try
@@ -49,7 +49,7 @@ namespace AuthServer.Controllers
                 await _dbContext.SaveChangesAsync();
 
                 // Return success
-                return Ok(new CreateUserResponse
+                return Ok(new CreateUserResponseBody
                 {
                     Id = user.Id,
                     Username = user.Username

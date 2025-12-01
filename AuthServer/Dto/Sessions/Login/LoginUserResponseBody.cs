@@ -1,6 +1,6 @@
 ﻿namespace AuthServer.Dto.Sessions.Login
 {
-    public class LoginUserResponse
+    public class LoginUserResponseBody
     {
         public string SessionToken = null!;
     }
