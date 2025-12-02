@@ -51,7 +51,7 @@ builder.Services.AddAuthentication(options =>
 
 // Add services
 builder.Services.AddSingleton<PasswordHasher<User>>();
-builder.Services.AddSingleton<TokenService>();
+builder.Services.AddSingleton<JwtTokenService>();
 #endregion
 
 #region Configure the app

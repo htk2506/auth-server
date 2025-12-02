@@ -5,11 +5,11 @@ using System.Text;
 
 namespace AuthServer.Services
 {
-    public class TokenService
+    public class JwtTokenService
     {
         private readonly IConfiguration _configuration;
 
-        public TokenService(IConfiguration configuration)
+        public JwtTokenService(IConfiguration configuration)
         {
             _configuration = configuration;
         }
@@ -36,7 +36,7 @@ namespace AuthServer.Services
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public bool ValidateToken(string token, out JwtSecurityToken? jwt)
+        public bool ValidateJwtToken(string token, out JwtSecurityToken? jwt)
         {
             ICollection<SecurityKey> signingKeys = [new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SymmetricKey"] ?? throw new NullReferenceException("Missing key")))];
 

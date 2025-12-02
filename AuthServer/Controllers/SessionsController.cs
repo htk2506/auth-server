@@ -14,13 +14,13 @@ namespace AuthServer.Controllers
         private readonly IConfiguration _configuration;
         private readonly AppDbContext _dbContext;
         private readonly PasswordHasher<User> _passwordHasher;
-        private readonly TokenService _tokenService;
+        private readonly JwtTokenService _tokenService;
 
         public SessionsController(
             IConfiguration configuration,
             AppDbContext dbContext,
             PasswordHasher<User> passwordHasher,
-            TokenService tokenService
+            JwtTokenService tokenService
         )
         {
             _configuration = configuration;

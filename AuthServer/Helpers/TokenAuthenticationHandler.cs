@@ -11,14 +11,14 @@ namespace AuthServer.Helpers
 {
     public class TokenAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
-        private readonly TokenService _tokenService;
+        private readonly JwtTokenService _tokenService;
         private readonly AppDbContext _dbContext;
 
         public TokenAuthenticationHandler(
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
-            TokenService tokenService,
+            JwtTokenService tokenService,
             AppDbContext dbContext
         ) : base(options, logger, encoder)
         {
@@ -40,7 +40,7 @@ namespace AuthServer.Helpers
             string token = authHeader.Substring("Bearer ".Length).Trim();
 
             // Validate the token 
-            bool isTokenValid = _tokenService.ValidateToken(token, out JwtSecurityToken? jwt);
+            bool isTokenValid = _tokenService.ValidateJwtToken(token, out JwtSecurityToken? jwt);
             if (!isTokenValid || jwt == null)
             {
                 return AuthenticateResult.Fail("Invalid token.");
