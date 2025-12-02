@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace AuthServer.Controllers
 {
@@ -19,8 +20,13 @@ namespace AuthServer.Controllers
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         public IActionResult Protected()
         {
-            // TODO: Add more specific user
-            return Ok("Hello user! This route is protected.");
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            string username = User.FindFirstValue(ClaimTypes.Name) ?? "";
+
+            return Ok($"""
+                Hello user! This route is protected. 
+                You are {username} and your ID is {userId}
+                """);
         }
     }
 }
