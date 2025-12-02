@@ -1,9 +1,9 @@
 ﻿using AuthServer.Database;
 using AuthServer.Database.Models;
 using AuthServer.Dto.Sessions.Login;
+using AuthServer.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
 
 namespace AuthServer.Controllers
 {
@@ -13,11 +13,17 @@ namespace AuthServer.Controllers
     {
         private readonly AppDbContext _dbContext;
         private readonly PasswordHasher<User> _passwordHasher;
+        private readonly TokenService _tokenService;
 
-        public SessionsController(AppDbContext dbContext, PasswordHasher<User> passwordHasher)
+        public SessionsController(
+            AppDbContext dbContext,
+            PasswordHasher<User> passwordHasher,
+            TokenService tokenService
+        )
         {
             _dbContext = dbContext;
             _passwordHasher = passwordHasher;
+            _tokenService = tokenService;
         }
 
         [HttpPost("login")]
@@ -35,12 +41,14 @@ namespace AuthServer.Controllers
                 PasswordVerificationResult passwordVerificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, requestBody.Password);
                 if (passwordVerificationResult != PasswordVerificationResult.Success) { return Unauthorized("Invalid credentials."); }
 
+                // Generate a session token 
+                string sessionToken = _tokenService.GenerateJwtToken(user.Id, Guid.NewGuid());
+
                 // TODO: Add a new session entry 
 
-                // TODO: Generate a session token 
 
-                // Return success
-                return Ok(new LoginUserResponseBody { SessionToken = $"token-{Guid.NewGuid()}" });
+                // Return token 
+                return Ok(new LoginUserResponseBody { SessionToken = sessionToken });
             }
             catch (Exception ex)
             {

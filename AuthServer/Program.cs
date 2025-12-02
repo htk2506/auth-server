@@ -1,5 +1,6 @@
 using AuthServer.Database;
 using AuthServer.Database.Models;
+using AuthServer.Services;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
@@ -30,8 +31,9 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Database")).UseSnakeCaseNamingConvention();
 });
 
-// Add PasswordHasher
+// Add services
 builder.Services.AddSingleton<PasswordHasher<User>>();
+builder.Services.AddSingleton<TokenService>();
 #endregion
 
 #region Configure the app
