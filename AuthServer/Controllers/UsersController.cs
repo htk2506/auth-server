@@ -26,6 +26,10 @@ namespace AuthServer.Controllers
         {
             try
             {
+                // Check if username already taken
+                User? existingUser = _dbContext.Users.FirstOrDefault(user => user.Username.Equals(requestBody.Username.ToLower()));
+                if (existingUser != null) { return BadRequest("Username taken."); }
+
                 // Create user to store
                 User user = new User
                 {
