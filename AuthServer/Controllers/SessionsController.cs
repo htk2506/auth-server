@@ -44,12 +44,13 @@ namespace AuthServer.Controllers
                 PasswordVerificationResult passwordVerificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, requestBody.Password);
                 if (passwordVerificationResult != PasswordVerificationResult.Success) { return Unauthorized("Invalid credentials."); }
 
-                // Generate a session token 
                 DateTime expiration = DateTime.UtcNow.AddDays(_configuration.GetValue<int>("Jwt:SessionDays"));
-                string sessionToken = _tokenService.GenerateJwtToken(user.Id.ToString(), Guid.NewGuid().ToString(), expiration);
-
+                
                 // TODO: Add a new session entry 
+                Guid sessionId = Guid.NewGuid(); // TODO: Get this off the database
 
+                // Generate a session token 
+                string sessionToken = _tokenService.GenerateJwtToken(user.Id.ToString(), sessionId.ToString(), expiration);
 
                 // Return token 
                 return Ok(new LoginUserResponseBody { SessionToken = sessionToken });
