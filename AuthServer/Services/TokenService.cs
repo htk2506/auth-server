@@ -14,12 +14,12 @@ namespace AuthServer.Services
             _configuration = configuration;
         }
 
-        public string GenerateJwtToken(Guid userId, Guid jti)
+        public string GenerateJwtToken(string userId, string jti, DateTime expiration)
         {
             var claims = new[]
             {
-                new Claim(JwtRegisteredClaimNames.Sub, userId.ToString()),
-                new Claim(JwtRegisteredClaimNames.Jti, jti.ToString())
+                new Claim(JwtRegisteredClaimNames.Sub, userId),
+                new Claim(JwtRegisteredClaimNames.Jti, jti)
             };
 
             var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SymmetricKey"] ?? throw new NullReferenceException("Missing key")));
@@ -29,7 +29,7 @@ namespace AuthServer.Services
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: DateTime.UtcNow.AddDays(_configuration.GetValue<int>("Jwt:SessionDays")),
+                expires: expiration,
                 signingCredentials: creds
             );
 

@@ -11,16 +11,19 @@ namespace AuthServer.Controllers
     [Route("[controller]")]
     public class SessionsController : ControllerBase
     {
+        private readonly IConfiguration _configuration;
         private readonly AppDbContext _dbContext;
         private readonly PasswordHasher<User> _passwordHasher;
         private readonly TokenService _tokenService;
 
         public SessionsController(
+            IConfiguration configuration,
             AppDbContext dbContext,
             PasswordHasher<User> passwordHasher,
             TokenService tokenService
         )
         {
+            _configuration = configuration;
             _dbContext = dbContext;
             _passwordHasher = passwordHasher;
             _tokenService = tokenService;
@@ -42,7 +45,8 @@ namespace AuthServer.Controllers
                 if (passwordVerificationResult != PasswordVerificationResult.Success) { return Unauthorized("Invalid credentials."); }
 
                 // Generate a session token 
-                string sessionToken = _tokenService.GenerateJwtToken(user.Id, Guid.NewGuid());
+                DateTime expiration = DateTime.UtcNow.AddDays(_configuration.GetValue<int>("Jwt:SessionDays"));
+                string sessionToken = _tokenService.GenerateJwtToken(user.Id.ToString(), Guid.NewGuid().ToString(), expiration);
 
                 // TODO: Add a new session entry 
 
