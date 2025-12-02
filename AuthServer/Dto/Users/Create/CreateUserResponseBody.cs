@@ -2,7 +2,7 @@
 {
     public class CreateUserResponseBody
     {
-        public Guid Id { get; set; } 
+        public Guid Id { get; set; }
         public string Username { get; set; } = null!;
     }
 }

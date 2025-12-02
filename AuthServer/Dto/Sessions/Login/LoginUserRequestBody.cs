@@ -1,9 +1,13 @@
-﻿namespace AuthServer.Dto.Sessions.Login
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace AuthServer.Dto.Sessions.Login
 {
     public class LoginUserRequestBody
     {
-        public required string Username { get; set; }
+        [Required]
+        public string Username { get; set; } = null!;
 
-        public required string Password { get; set; }
+        [Required]
+        public string Password { get; set; } = null!;
     }
 }

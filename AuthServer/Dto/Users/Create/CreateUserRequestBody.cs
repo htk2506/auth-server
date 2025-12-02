@@ -6,10 +6,10 @@ namespace AuthServer.Dto.Users.Create
     {
         [Required]
         [RegularExpression(@"^[a-z\d]{1,254}$")]
-        public required string Username { get; set; }
+        public string Username { get; set; } = null!;
 
         [Required]
-        public required string Password { get; set; }
+        public string Password { get; set; } = null!;
 
         public string? Note { get; set; }
     }
