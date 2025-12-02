@@ -10,11 +10,9 @@ namespace AuthServer.Helpers
         public TokenAuthenticationHandler(
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
-            UrlEncoder encoder,
-            ISystemClock clock
-        ) : base(options, logger, encoder, clock)
-        {
-        }
+            UrlEncoder encoder
+        ) : base(options, logger, encoder) { }
+
 
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
@@ -22,25 +20,36 @@ namespace AuthServer.Helpers
             string? authHeader = Request.Headers["Authorization"];
             if (string.IsNullOrEmpty(authHeader) || !authHeader.StartsWith("Bearer "))
             {
-                return AuthenticateResult.Fail("Invalid Authorization Header");
+                return AuthenticateResult.Fail("Invalid authorization header.");
             }
 
             // Extract the token
             string token = authHeader.Substring("Bearer ".Length).Trim();
+
+            // TODO: Validate the signature of the token 
+
+            // TODO: Make sure token is for valid session
+
             //if (token != "valid-token")
             //{
             //    return AuthenticateResult.Fail("Invalid Token");
             //}
 
-            // Create claims and principal
-            var claims = new[] { new Claim(ClaimTypes.Name, "CustomUser") };
+            // TODO: Create claims with user id and username
+            var claims = new[] {
+                new Claim(ClaimTypes.Name, "username"),
+                new Claim(ClaimTypes.NameIdentifier, "user id"),
+            };
             var identity = new ClaimsIdentity(claims, Scheme.Name);
             var principal = new ClaimsPrincipal(identity);
             var ticket = new AuthenticationTicket(principal, Scheme.Name);
 
             return AuthenticateResult.Success(ticket);
         }
+
+        protected override async Task HandleChallengeAsync(AuthenticationProperties properties)
+        {
+            await base.HandleChallengeAsync(properties);
+        }
     }
-
-
 }
