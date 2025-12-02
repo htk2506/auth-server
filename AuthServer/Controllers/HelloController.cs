@@ -6,12 +6,11 @@ namespace AuthServer.Controllers
     [Route("[controller]")]
     public class HelloController : ControllerBase
     {
-        [HttpGet]
-        [Route("unprotected")]
+        [HttpGet("unprotected")]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         public IActionResult UnprotectedGet()
         {
-            return Ok("Hello World! This route doesn't require authentication");
+            return Ok("Hello World! This route doesn't require authentication.");
         }
     }
 }
