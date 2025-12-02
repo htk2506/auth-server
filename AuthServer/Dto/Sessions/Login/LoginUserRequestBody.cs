@@ -1,6 +1,6 @@
 ﻿namespace AuthServer.Dto.Sessions.Login
 {
-    public class LoginUserRequest
+    public class LoginUserRequestBody
     {
         public required string Username { get; set; }
 

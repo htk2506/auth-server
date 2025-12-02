@@ -7,6 +7,7 @@ using System.Text.Json;
 // Build the app
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddControllers();
+builder.Services.AddRouting(options => options.LowercaseUrls = true);
 builder.Services.AddOpenApi();
 // Configure database
 builder.Services.AddDbContext<AppDbContext>(options =>

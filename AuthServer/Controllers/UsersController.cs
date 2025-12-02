@@ -7,8 +7,8 @@ using AuthServer.Dto.Users.Create;
 
 namespace AuthServer.Controllers
 {
-    [Route("[controller]")]
     [ApiController]
+    [Route("[controller]")]
     public class UsersController : ControllerBase
     {
         private readonly AppDbContext _dbContext;
@@ -21,7 +21,7 @@ namespace AuthServer.Controllers
         }
 
         [HttpPost]
-        [ProducesResponseType(typeof(CreateUserResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CreateUserResponseBody), StatusCodes.Status200OK)]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserRequestBody requestBody)
         {
             try
@@ -30,7 +30,7 @@ namespace AuthServer.Controllers
                 User user = new User
                 {
                     Username = requestBody.Username.ToLower(),
-                    Notes = requestBody.Notes ?? "",
+                    Note = requestBody.Note ?? "",
                 };
                 user.PasswordHash = _passwordHasher.HashPassword(user, requestBody.Password);
 
@@ -49,7 +49,7 @@ namespace AuthServer.Controllers
                 await _dbContext.SaveChangesAsync();
 
                 // Return success
-                return Ok(new CreateUserResponse
+                return Ok(new CreateUserResponseBody
                 {
                     Id = user.Id,
                     Username = user.Username

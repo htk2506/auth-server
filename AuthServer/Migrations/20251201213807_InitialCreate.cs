@@ -18,7 +18,7 @@ namespace AuthServer.Migrations
                     id = table.Column<Guid>(type: "uuid", nullable: false),
                     username = table.Column<string>(type: "text", nullable: false),
                     password_hash = table.Column<string>(type: "text", nullable: false),
-                    notes = table.Column<string>(type: "text", nullable: false)
+                    note = table.Column<string>(type: "text", nullable: false)
                 },
                 constraints: table =>
                 {
