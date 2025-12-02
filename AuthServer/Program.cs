@@ -1,6 +1,8 @@
 using AuthServer.Database;
 using AuthServer.Database.Models;
+using AuthServer.Helpers;
 using AuthServer.Services;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using System.Text.Json;
@@ -31,6 +33,14 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Database")).UseSnakeCaseNamingConvention();
 });
 
+// Add authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = "SessionTokenScheme";
+    options.DefaultChallengeScheme = "SessionTokenScheme";
+})
+.AddScheme<AuthenticationSchemeOptions, TokenAuthenticationHandler>("SessionTokenScheme", null);
+
 // Add services
 builder.Services.AddSingleton<PasswordHasher<User>>();
 builder.Services.AddSingleton<TokenService>();
@@ -54,7 +64,8 @@ if (app.Environment.IsDevelopment())
 // Send HTTP requests to HTTPS
 app.UseHttpsRedirection();
 
-// Add authorization
+// Add authentication and authorization
+app.UseAuthentication();
 app.UseAuthorization();
 
 // Add endpoints for controller actions
