@@ -30,7 +30,7 @@ namespace AuthServer.Controllers
             try
             {
                 // Check if username already taken
-                AppUser? existingUser = _dbContext.AppUsers.FirstOrDefault(user => user.Username.Equals(requestBody.Username.ToLower()));
+                AppUser? existingUser = _dbContext.AppUsers.FirstOrDefault(x => x.Username.Equals(requestBody.Username.ToLower()));
                 if (existingUser != null) { return BadRequest("Username taken."); }
 
                 // Create user to store
@@ -43,13 +43,7 @@ namespace AuthServer.Controllers
 
                 // Validate the user model
                 TryValidateModel(user);
-                if (!ModelState.IsValid)
-                {
-                    var modelErrors = Utils.GetModelErrors(ModelState);
-
-                    // Return failure 
-                    return BadRequest(modelErrors);
-                }
+                if (!ModelState.IsValid) { return BadRequest(Utils.GetModelErrors(ModelState)); }
 
                 // Save user to database
                 _dbContext.AppUsers.Add(user);
@@ -78,10 +72,7 @@ namespace AuthServer.Controllers
             {
                 string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
                 AppUser? user = _dbContext.AppUsers.Find(Guid.Parse(userId));
-                if (user == null)
-                {
-                    return BadRequest("User not found");
-                }
+                if (user == null) { return BadRequest("User not found"); }
 
                 // Return success
                 return Ok(new GetUserResponseBody

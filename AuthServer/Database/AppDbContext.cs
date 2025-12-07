@@ -7,6 +7,7 @@ namespace AuthServer.Database
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
+        // Models 
         public DbSet<AppUser> AppUsers { get; set; }
         public DbSet<UserSession> UserSessions { get; set; }
 
