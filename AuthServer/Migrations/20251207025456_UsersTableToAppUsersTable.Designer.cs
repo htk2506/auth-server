@@ -3,6 +3,7 @@ using System;
 using AuthServer.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AuthServer.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251207025456_UsersTableToAppUsersTable")]
+    partial class UsersTableToAppUsersTable
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -53,42 +56,6 @@ namespace AuthServer.Migrations
                         .HasDatabaseName("ix_app_users_username");
 
                     b.ToTable("app_users", (string)null);
-                });
-
-            modelBuilder.Entity("AuthServer.Database.Models.UserSession", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid>("AppUserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("app_user_id");
-
-                    b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expires_at");
-
-                    b.HasKey("Id")
-                        .HasName("pk_user_sessions");
-
-                    b.HasIndex("AppUserId")
-                        .HasDatabaseName("ix_user_sessions_app_user_id");
-
-                    b.ToTable("user_sessions", (string)null);
-                });
-
-            modelBuilder.Entity("AuthServer.Database.Models.UserSession", b =>
-                {
-                    b.HasOne("AuthServer.Database.Models.AppUser", "AppUser")
-                        .WithMany()
-                        .HasForeignKey("AppUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_user_sessions_app_users_app_user_id");
-
-                    b.Navigation("AppUser");
                 });
 #pragma warning restore 612, 618
         }
