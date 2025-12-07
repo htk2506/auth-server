@@ -1,17 +1,27 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
+using System.Security.Cryptography;
 
 namespace AuthServer.Services
 {
     public class JwtTokenService
     {
         private readonly IConfiguration _configuration;
+        private readonly RsaSecurityKey _privateKey;
+        private readonly RsaSecurityKey _publicKey;
 
         public JwtTokenService(IConfiguration configuration)
         {
             _configuration = configuration;
+
+            RSACryptoServiceProvider rsaPrivate = new RSACryptoServiceProvider();
+            rsaPrivate.FromXmlString(_configuration["Jwt:PrivateKey"] ?? throw new NullReferenceException("Missing private key"));
+            _privateKey = new RsaSecurityKey(rsaPrivate);
+
+            RSACryptoServiceProvider rsaPublic = new RSACryptoServiceProvider();
+            rsaPublic.FromXmlString(configuration["Jwt:PublicKey"] ?? throw new NullReferenceException("Missing public key"));
+            _publicKey = new RsaSecurityKey(rsaPublic);
         }
 
         public string GenerateJwtToken(string userId, string jti, DateTime expiration)
@@ -22,15 +32,14 @@ namespace AuthServer.Services
                 new Claim(JwtRegisteredClaimNames.Jti, jti)
             };
 
-            var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SymmetricKey"] ?? throw new NullReferenceException("Missing key")));
-            var creds = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+            var credentials = new SigningCredentials(_privateKey, SecurityAlgorithms.RsaSha256);
 
             var token = new JwtSecurityToken(
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
                 expires: expiration,
-                signingCredentials: creds
+                signingCredentials: credentials
             );
 
             return new JwtSecurityTokenHandler().WriteToken(token);
@@ -38,8 +47,6 @@ namespace AuthServer.Services
 
         public bool ValidateJwtToken(string token, out JwtSecurityToken? jwt)
         {
-            ICollection<SecurityKey> signingKeys = [new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["Jwt:SymmetricKey"] ?? throw new NullReferenceException("Missing key")))];
-
             var validationParameters = new TokenValidationParameters
             {
                 ValidateIssuer = true,
@@ -47,7 +54,7 @@ namespace AuthServer.Services
                 ValidateAudience = true,
                 ValidAudience = _configuration["Jwt:Audience"],
                 ValidateIssuerSigningKey = true,
-                IssuerSigningKeys = signingKeys,
+                IssuerSigningKeys = [_publicKey],
                 ValidateLifetime = true
             };
 

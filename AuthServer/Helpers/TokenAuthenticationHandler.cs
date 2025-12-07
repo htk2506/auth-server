@@ -49,7 +49,8 @@ namespace AuthServer.Helpers
             // TODO: Make sure token is for valid session
 
             // Get the user
-            User? user =_dbContext.Users.FirstOrDefault(x => x.Id.ToString().Equals(jwt.Subject));
+            string userId = jwt.Subject;
+            User? user =_dbContext.Users.FirstOrDefault(x => x.Id.ToString().Equals(userId));
             if (user == null)
             {
                 return AuthenticateResult.Fail("User not found.");
