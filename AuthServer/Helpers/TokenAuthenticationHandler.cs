@@ -49,7 +49,7 @@ namespace AuthServer.Helpers
 
             // Get the user
             string userId = jwt.Subject;
-            User? user =_dbContext.Users.FirstOrDefault(x => x.Id.ToString().Equals(userId));
+            AppUser? user =_dbContext.AppUsers.FirstOrDefault(x => x.Id.ToString().Equals(userId));
             if (user == null)
             {
                 return AuthenticateResult.Fail("User not found.");

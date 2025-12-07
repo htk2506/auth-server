@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 namespace AuthServer.Database.Models
 {
     [Index(nameof(Username), IsUnique = true)]
-    public class User
+    public class AppUser
     {
         [Key]
         public Guid Id { get; set; }

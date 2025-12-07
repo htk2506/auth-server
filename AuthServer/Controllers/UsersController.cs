@@ -12,9 +12,9 @@ namespace AuthServer.Controllers
     public class UsersController : ControllerBase
     {
         private readonly AppDbContext _dbContext;
-        private readonly PasswordHasher<User> _passwordHasher;
+        private readonly PasswordHasher<AppUser> _passwordHasher;
 
-        public UsersController(AppDbContext dbContext, PasswordHasher<User> passwordHasher)
+        public UsersController(AppDbContext dbContext, PasswordHasher<AppUser> passwordHasher)
         {
             _dbContext = dbContext;
             _passwordHasher = passwordHasher;
@@ -27,11 +27,11 @@ namespace AuthServer.Controllers
             try
             {
                 // Check if username already taken
-                User? existingUser = _dbContext.Users.FirstOrDefault(user => user.Username.Equals(requestBody.Username.ToLower()));
+                AppUser? existingUser = _dbContext.AppUsers.FirstOrDefault(user => user.Username.Equals(requestBody.Username.ToLower()));
                 if (existingUser != null) { return BadRequest("Username taken."); }
 
                 // Create user to store
-                User user = new User
+                AppUser user = new AppUser
                 {
                     Username = requestBody.Username.ToLower(),
                     Note = requestBody.Note ?? "",
@@ -49,7 +49,7 @@ namespace AuthServer.Controllers
                 }
 
                 // Save user to database
-                _dbContext.Users.Add(user);
+                _dbContext.AppUsers.Add(user);
                 await _dbContext.SaveChangesAsync();
 
                 // Return success

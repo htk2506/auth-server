@@ -13,13 +13,13 @@ namespace AuthServer.Controllers
     {
         private readonly IConfiguration _configuration;
         private readonly AppDbContext _dbContext;
-        private readonly PasswordHasher<User> _passwordHasher;
+        private readonly PasswordHasher<AppUser> _passwordHasher;
         private readonly JwtTokenService _tokenService;
 
         public SessionsController(
             IConfiguration configuration,
             AppDbContext dbContext,
-            PasswordHasher<User> passwordHasher,
+            PasswordHasher<AppUser> passwordHasher,
             JwtTokenService tokenService
         )
         {
@@ -37,7 +37,7 @@ namespace AuthServer.Controllers
             {
                 // Attempt to get the user
                 string username = requestBody.Username.ToLower();
-                User? user = _dbContext.Users.FirstOrDefault(user => user.Username.Equals(username));
+                AppUser? user = _dbContext.AppUsers.FirstOrDefault(user => user.Username.Equals(username));
                 if (user == null) { return Unauthorized("User not found."); }
 
                 // Check the password hash

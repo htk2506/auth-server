@@ -50,7 +50,7 @@ builder.Services.AddAuthentication(options =>
 .AddScheme<AuthenticationSchemeOptions, TokenAuthenticationHandler>("SessionTokenScheme", null);
 
 // Add services
-builder.Services.AddSingleton<PasswordHasher<User>>();
+builder.Services.AddSingleton<PasswordHasher<AppUser>>();
 builder.Services.AddSingleton<JwtTokenService>();
 #endregion
 
