@@ -24,7 +24,7 @@ namespace AuthServer.Services
             _publicKey = new RsaSecurityKey(rsaPublic);
         }
 
-        public string GenerateJwtToken(string userId, string jti, DateTime expiration)
+        public string GenerateJwtToken(string userId, string jti, DateTimeOffset expiration)
         {
             var claims = new[]
             {
@@ -38,7 +38,7 @@ namespace AuthServer.Services
                 issuer: _configuration["Jwt:Issuer"],
                 audience: _configuration["Jwt:Audience"],
                 claims: claims,
-                expires: expiration,
+                expires: expiration.UtcDateTime,
                 signingCredentials: credentials
             );
 

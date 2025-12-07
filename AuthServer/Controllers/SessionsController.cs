@@ -44,7 +44,7 @@ namespace AuthServer.Controllers
                 PasswordVerificationResult passwordVerificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, requestBody.Password);
                 if (passwordVerificationResult != PasswordVerificationResult.Success) { return Unauthorized("Invalid credentials."); }
 
-                DateTime expiration = DateTime.UtcNow.AddDays(_configuration.GetValue<int>("Jwt:SessionDays"));
+                DateTimeOffset expiration = DateTimeOffset.UtcNow.AddDays(_configuration.GetValue<int>("Jwt:SessionDays"));
                 
                 // TODO: Add a new session entry 
                 Guid sessionId = Guid.NewGuid(); // TODO: Get this off the database
