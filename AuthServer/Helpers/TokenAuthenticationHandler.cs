@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text.Encodings.Web;
+using System.Text.Json;
 
 namespace AuthServer.Helpers
 {
@@ -40,25 +41,21 @@ namespace AuthServer.Helpers
 
             // Validate the token 
             bool isTokenValid = _tokenService.ValidateJwtToken(token, out JwtSecurityToken? jwt);
-            if (!isTokenValid || jwt == null)
-            {
-                return AuthenticateResult.Fail("Invalid token.");
-            }
+            if (!isTokenValid || jwt == null) { return AuthenticateResult.Fail("Invalid token."); }
 
-            // TODO: Make sure token is for valid session
+            // Verify token is for an active and unexpired session
+            UserSession? session = _dbContext.UserSessions.FirstOrDefault(x => x.Id == Guid.Parse(jwt.Id) && DateTimeOffset.UtcNow < x.ExpiresAt);
+            if (session == null) { return AuthenticateResult.Fail("No active session found."); }
+            _dbContext.UserSessions.Entry(session).Reference(x => x.AppUser).Load();
 
-            // Get the user
-            string userId = jwt.Subject;
-            AppUser? user =_dbContext.AppUsers.FirstOrDefault(x => x.Id.ToString().Equals(userId));
-            if (user == null)
-            {
-                return AuthenticateResult.Fail("User not found.");
-            }
+            // Verify session belongs to same user as JWT
+            Console.WriteLine("user: " + JsonSerializer.Serialize(session.AppUser));
+            if (session.AppUser.Id.ToString() != jwt.Subject) { return AuthenticateResult.Fail("Session doesn't belong to user."); }
 
             // Create claims for the user
             var claims = new[] {
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new Claim(ClaimTypes.Name, session.AppUser.Username),
+                new Claim(ClaimTypes.NameIdentifier, session.AppUser.Id.ToString()),
             };
             var identity = new ClaimsIdentity(claims, Scheme.Name);
             var principal = new ClaimsPrincipal(identity);
