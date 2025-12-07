@@ -3,8 +3,10 @@ using AuthServer.Database.Models;
 using AuthServer.Dto.Sessions.Login;
 using AuthServer.Helpers;
 using AuthServer.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace AuthServer.Controllers
 {
@@ -63,11 +65,37 @@ namespace AuthServer.Controllers
                 _dbContext.UserSessions.Add(session);
                 await _dbContext.SaveChangesAsync();
 
-                // Generate a session token 
+                // Generate a session token with user ID as subject and session ID as JTI
                 string sessionToken = _tokenService.GenerateJwtToken(user.Id.ToString(), session.Id.ToString(), expiration);
 
                 // Return token 
                 return Ok(new LoginUserResponseBody { SessionToken = sessionToken });
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex);
+                return Problem("Error occurred.");
+            }
+        }
+
+        [Authorize]
+        [HttpPost("logout")]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        public async Task<IActionResult> Logout()
+        {
+            try
+            {
+                // Get the session
+                string sessionId = User.FindFirstValue(ClaimTypes.Authentication) ?? "";
+                UserSession? session = _dbContext.UserSessions.Find(Guid.Parse(sessionId));
+                if (session == null) { return BadRequest("Session not found."); }
+
+                // Remove session from database
+                _dbContext.UserSessions.Remove(session);
+                await _dbContext.SaveChangesAsync();
+
+                // Return token 
+                return Ok("Logout successful.");
             }
             catch (Exception ex)
             {

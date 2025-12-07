@@ -54,8 +54,8 @@ namespace AuthServer.Helpers
 
             // Create claims for the user
             var claims = new[] {
-                new Claim(ClaimTypes.Name, session.AppUser.Username),
-                new Claim(ClaimTypes.NameIdentifier, session.AppUser.Id.ToString()),
+                new Claim(ClaimTypes.NameIdentifier, session.AppUser.Id.ToString()),    // user ID
+                new Claim(ClaimTypes.Authentication, session.Id.ToString())             // session ID
             };
             var identity = new ClaimsIdentity(claims, Scheme.Name);
             var principal = new ClaimsPrincipal(identity);

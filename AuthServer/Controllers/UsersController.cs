@@ -72,7 +72,7 @@ namespace AuthServer.Controllers
             {
                 string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
                 AppUser? user = _dbContext.AppUsers.Find(Guid.Parse(userId));
-                if (user == null) { return BadRequest("User not found"); }
+                if (user == null) { return BadRequest("User not found."); }
 
                 // Return success
                 return Ok(new GetUserResponseBody
