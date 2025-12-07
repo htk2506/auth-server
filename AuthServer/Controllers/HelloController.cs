@@ -23,10 +23,7 @@ namespace AuthServer.Controllers
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
             string username = User.FindFirstValue(ClaimTypes.Name) ?? "";
 
-            return Ok($"""
-                Hello user! This route is protected. 
-                You are {username} and your ID is {userId}
-                """);
+            return Ok($"Hello, {username}! You are authorized.");
         }
     }
 }

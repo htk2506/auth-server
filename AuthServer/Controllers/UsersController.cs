@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using AuthServer.Helpers;
-using Microsoft.AspNetCore.Identity;
+﻿using AuthServer.Database;
 using AuthServer.Database.Models;
-using AuthServer.Database;
 using AuthServer.Dto.Users.Create;
+using AuthServer.Dto.Users.Get;
+using AuthServer.Helpers;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace AuthServer.Controllers
 {
@@ -57,6 +60,35 @@ namespace AuthServer.Controllers
                 {
                     Id = user.Id,
                     Username = user.Username
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex);
+                return Problem("Error occurred.");
+            }
+        }
+
+        [Authorize]
+        [HttpGet("me")]
+        [ProducesResponseType(typeof(GetUserResponseBody), StatusCodes.Status200OK)]
+        public async Task<IActionResult> GetUser()
+        {
+            try
+            {
+                string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+                AppUser? user = _dbContext.AppUsers.Find(Guid.Parse(userId));
+                if (user == null)
+                {
+                    return BadRequest("User not found");
+                }
+
+                // Return success
+                return Ok(new GetUserResponseBody
+                {
+                    Id = user.Id,
+                    Username = user.Username,
+                    Note = user.Note
                 });
             }
             catch (Exception ex)
