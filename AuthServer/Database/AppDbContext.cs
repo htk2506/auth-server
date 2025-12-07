@@ -1,5 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
-using AuthServer.Database.Models;
+﻿using AuthServer.Database.Models;
+using Microsoft.EntityFrameworkCore;
 
 namespace AuthServer.Database
 {
@@ -8,5 +8,11 @@ namespace AuthServer.Database
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options) { }
 
         public DbSet<AppUser> AppUsers { get; set; }
+        public DbSet<UserSession> UserSessions { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+        }
     }
 }
