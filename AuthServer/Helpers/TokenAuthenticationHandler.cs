@@ -26,7 +26,6 @@ namespace AuthServer.Helpers
             _tokenService = tokenService;
         }
 
-
         protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
         {
             // Get the auth header

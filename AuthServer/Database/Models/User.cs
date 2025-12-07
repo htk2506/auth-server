@@ -10,7 +10,9 @@ namespace AuthServer.Database.Models
         public Guid Id { get; set; }
 
         [Required]
-        [RegularExpression(@"^[a-z\d]{1,254}$")]
+        [MinLength(3)]
+        [MaxLength(32)]
+        [RegularExpression(@"^[a-z0-9](_?[a-z0-9])*$")]
         public string Username { get; set; } = null!;
 
         [Required]
