@@ -69,9 +69,6 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-// Send HTTP requests to HTTPS
-app.UseHttpsRedirection();
-
 // Add authentication and authorization
 app.UseAuthentication();
 app.UseAuthorization();
