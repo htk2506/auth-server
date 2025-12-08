@@ -69,6 +69,13 @@ if (app.Environment.IsDevelopment())
     });
 }
 
+// Add HTTPS redirection if there's an HTTPS URL
+string urls = builder.WebHost.GetSetting(WebHostDefaults.ServerUrlsKey) ?? "";
+if (urls.ToLower().Contains("https"))
+{
+    app.UseHttpsRedirection();
+}
+
 // Add authentication and authorization
 app.UseAuthentication();
 app.UseAuthorization();
