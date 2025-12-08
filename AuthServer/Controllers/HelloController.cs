@@ -21,9 +21,8 @@ namespace AuthServer.Controllers
         public IActionResult Protected()
         {
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-            string username = User.FindFirstValue(ClaimTypes.Name) ?? "";
 
-            return Ok($"Hello, {username}! You are authorized.");
+            return Ok($"Hello! You are authorized.");
         }
     }
 }
