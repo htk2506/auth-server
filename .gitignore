@@ -416,3 +416,8 @@ FodyWeavers.xsd
 *.msix
 *.msm
 *.msp
+
+# More to ignore
+.github/workflows/fly-deploy.yml
+fly.toml
+deployment-secrets.json
