@@ -11,6 +11,11 @@ namespace AuthServer.Database
         public DbSet<AppUser> AppUsers { get; set; }
         public DbSet<UserSession> UserSessions { get; set; }
 
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.AddInterceptors(new CustomSaveChangesInterceptor());
+        }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
