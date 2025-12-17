@@ -18,6 +18,8 @@ namespace AuthServer.Database
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
+            modelBuilder.Entity<AppUser>().HasQueryFilter(x => !x.IsDeleted);
+
             base.OnModelCreating(modelBuilder);
         }
     }

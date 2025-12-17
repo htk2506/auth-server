@@ -6,6 +6,7 @@ using AuthServer.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace AuthServer.Controllers
@@ -29,9 +30,9 @@ namespace AuthServer.Controllers
         {
             try
             {
-                // Check if username already taken
-                AppUser? existingUser = _dbContext.AppUsers.FirstOrDefault(x => x.Username.Equals(requestBody.Username.ToLower()));
-                if (existingUser != null) { return BadRequest("Username taken."); }
+                // Check if username already taken (even by a deleted user) 
+                AppUser? existingUser = _dbContext.AppUsers.IgnoreQueryFilters().FirstOrDefault(x => x.Username.Equals(requestBody.Username.ToLower()));
+                if (existingUser != null) { return BadRequest("Username not available."); }
 
                 // Create user to store
                 AppUser user = new AppUser
@@ -81,6 +82,31 @@ namespace AuthServer.Controllers
                     Username = user.Username,
                     Note = user.Note
                 });
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex);
+                return Problem("Error occurred.");
+            }
+        }
+
+        [Authorize]
+        [HttpDelete("me")]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        public async Task<IActionResult> DeleteUser()
+        {
+            try
+            {
+                string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+                AppUser? user = _dbContext.AppUsers.Find(Guid.Parse(userId));
+                if (user == null) { return BadRequest("User not found."); }
+
+                // Delete the user
+                _dbContext.AppUsers.Remove(user);
+                await _dbContext.SaveChangesAsync();
+
+                // Return success
+                return Ok(true);
             }
             catch (Exception ex)
             {
