@@ -2,6 +2,7 @@
 using AuthServer.Database.Models;
 using AuthServer.Dto.Users.Create;
 using AuthServer.Dto.Users.Get;
+using AuthServer.Dto.Users.Update;
 using AuthServer.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -38,7 +39,7 @@ namespace AuthServer.Controllers
                 AppUser user = new AppUser
                 {
                     Username = requestBody.Username.ToLower(),
-                    Note = requestBody.Note ?? "",
+                    Note = requestBody.Note
                 };
                 user.PasswordHash = _passwordHasher.HashPassword(user, requestBody.Password);
 
@@ -54,7 +55,8 @@ namespace AuthServer.Controllers
                 return Ok(new CreateUserResponseBody
                 {
                     Id = user.Id,
-                    Username = user.Username
+                    Username = user.Username,
+                    Note = user.Note
                 });
             }
             catch (Exception ex)
@@ -71,6 +73,7 @@ namespace AuthServer.Controllers
         {
             try
             {
+                // Get the user
                 string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
                 AppUser? user = _dbContext.AppUsers.Find(Guid.Parse(userId));
                 if (user == null) { return BadRequest("User not found."); }
@@ -91,12 +94,58 @@ namespace AuthServer.Controllers
         }
 
         [Authorize]
+        [HttpPut("me")]
+        [ProducesResponseType(typeof(UpdateUserResponseBody), StatusCodes.Status200OK)]
+        public async Task<IActionResult> UpdateUser([FromBody] UpdateUserRequestBody requestBody)
+        {
+            try
+            {
+                // Get the user
+                string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+                AppUser? user = _dbContext.AppUsers.Find(Guid.Parse(userId));
+                if (user == null) { return BadRequest("User not found."); }
+
+                // Check if new username already taken (even by a deleted user) 
+                if (!user.Username.ToLower().Equals(requestBody.Username.ToLower()))
+                {
+                    AppUser? existingUser = _dbContext.AppUsers.IgnoreQueryFilters().FirstOrDefault(x => x.Username.Equals(requestBody.Username.ToLower()));
+                    if (existingUser != null) { return BadRequest("Username not available."); }
+                }
+
+                // Modify the user
+                user.Username = requestBody.Username.ToLower();
+                user.Note = requestBody.Note;
+
+                // Validate the user model
+                TryValidateModel(user);
+                if (!ModelState.IsValid) { return BadRequest(Utils.GetModelErrors(ModelState)); }
+
+                // Save changes to the database
+                await _dbContext.SaveChangesAsync();
+
+                // Return success
+                return Ok(new UpdateUserResponseBody
+                {
+                    Id = user.Id,
+                    Username = user.Username,
+                    Note = user.Note
+                });
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex);
+                return Problem("Error occurred.");
+            }
+        }
+
+        [Authorize]
         [HttpDelete("me")]
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         public async Task<IActionResult> DeleteUser()
         {
             try
             {
+                // Get the user
                 string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
                 AppUser? user = _dbContext.AppUsers.Find(Guid.Parse(userId));
                 if (user == null) { return BadRequest("User not found."); }
