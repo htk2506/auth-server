@@ -4,7 +4,7 @@ using Microsoft.EntityFrameworkCore;
 namespace AuthServer.Database.Models
 {
     [Index(nameof(Username), IsUnique = true)]
-    public class AppUser
+    public class AppUser : ICreateModifyTimestampable, ISoftDeletable
     {
         [Key]
         public Guid Id { get; set; }
@@ -19,5 +19,14 @@ namespace AuthServer.Database.Models
         public string PasswordHash { get; set; } = null!;
 
         public string Note { get; set; } = string.Empty;
+
+        // Interface implementations 
+        public DateTimeOffset CreatedAt { get; set; }
+
+        public DateTimeOffset ModifiedAt { get; set; }
+
+        public bool IsDeleted { get; set; } = false;
+
+        public DateTimeOffset? DeletedAt { get; set; }
     }
 }
