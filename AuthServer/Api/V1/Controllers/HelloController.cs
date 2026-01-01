@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace AuthServer.Controllers
+namespace AuthServer.Api.V1.Controllers
 {
     [ApiController]
     [Route("[controller]")]

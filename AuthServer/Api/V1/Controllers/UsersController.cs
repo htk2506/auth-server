@@ -1,8 +1,8 @@
-﻿using AuthServer.Database;
+﻿using AuthServer.Api.V1.Dto.Users.Create;
+using AuthServer.Api.V1.Dto.Users.Get;
+using AuthServer.Api.V1.Dto.Users.Update;
+using AuthServer.Database;
 using AuthServer.Database.Models;
-using AuthServer.Dto.Users.Create;
-using AuthServer.Dto.Users.Get;
-using AuthServer.Dto.Users.Update;
 using AuthServer.Helpers;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -10,7 +10,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
-namespace AuthServer.Controllers
+namespace AuthServer.Api.V1.Controllers
 {
     [ApiController]
     [Route("[controller]")]

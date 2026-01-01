@@ -1,6 +1,6 @@
-﻿using AuthServer.Database;
+﻿using AuthServer.Api.V1.Dto.Sessions.Login;
+using AuthServer.Database;
 using AuthServer.Database.Models;
-using AuthServer.Dto.Sessions.Login;
 using AuthServer.Helpers;
 using AuthServer.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace AuthServer.Controllers
+namespace AuthServer.Api.V1.Controllers
 {
     [ApiController]
     [Route("[controller]")]

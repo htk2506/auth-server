@@ -1,6 +1,6 @@
-﻿namespace AuthServer.Dto.Users.Update
+﻿namespace AuthServer.Api.V1.Dto.Users.Get
 {
-    public class UpdateUserResponseBody
+    public class GetUserResponseBody
     {
         public Guid Id { get; set; }
 
