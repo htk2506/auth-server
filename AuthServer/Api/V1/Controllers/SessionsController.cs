@@ -1,4 +1,5 @@
-﻿using AuthServer.Api.V1.Dto.Sessions.Login;
+﻿using Asp.Versioning;
+using AuthServer.Api.V1.Dto.Sessions.Login;
 using AuthServer.Database;
 using AuthServer.Database.Models;
 using AuthServer.Helpers;
@@ -11,7 +12,8 @@ using System.Security.Claims;
 namespace AuthServer.Api.V1.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [ApiVersion(1)]
+    [Route("v{version:apiVersion}/[controller]")]
     public class SessionsController : ControllerBase
     {
         private readonly IConfiguration _configuration;

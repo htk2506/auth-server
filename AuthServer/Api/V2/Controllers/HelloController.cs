@@ -1,9 +1,11 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Asp.Versioning;
+using Microsoft.AspNetCore.Mvc;
 
 namespace AuthServer.Api.V2.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [ApiVersion(2)]
+    [Route("v{version:apiVersion}/[controller]")]
     public class HelloController : ControllerBase
     {
         [HttpGet("unprotected")]
