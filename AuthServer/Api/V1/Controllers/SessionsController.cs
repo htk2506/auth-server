@@ -1,6 +1,7 @@
-﻿using AuthServer.Database;
+﻿using Asp.Versioning;
+using AuthServer.Api.V1.Dto.Sessions.Login;
+using AuthServer.Database;
 using AuthServer.Database.Models;
-using AuthServer.Dto.Sessions.Login;
 using AuthServer.Helpers;
 using AuthServer.Services;
 using Microsoft.AspNetCore.Authorization;
@@ -8,10 +9,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace AuthServer.Controllers
+namespace AuthServer.Api.V1.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [ApiVersion(1)]
+    [Route("v{version:apiVersion}/[controller]")]
     public class SessionsController : ControllerBase
     {
         private readonly IConfiguration _configuration;

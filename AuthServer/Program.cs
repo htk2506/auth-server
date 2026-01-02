@@ -1,3 +1,4 @@
+using Asp.Versioning;
 using AuthServer.Database;
 using AuthServer.Database.Models;
 using AuthServer.Helpers;
@@ -5,11 +6,18 @@ using AuthServer.Services;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.OpenApi.Models;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
 # region Configure the builder
 var builder = WebApplication.CreateBuilder(args);
+
+// Configure database
+builder.Services.AddDbContext<AppDbContext>(options =>
+{
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Database")).UseSnakeCaseNamingConvention();
+});
 
 // Add API controllers
 builder.Services.AddControllers()
@@ -21,25 +29,22 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
     });
 
-// Configure JSON options so that the API spec works
-builder.Services.ConfigureHttpJsonOptions(options =>
+// Configure API endpoint versioning
+builder.Services.AddApiVersioning(options =>
 {
-    options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
-    options.SerializerOptions.PropertyNameCaseInsensitive = true;
-    options.SerializerOptions.Converters.Add(new JsonStringEnumConverter());
-});
+    options.DefaultApiVersion = new ApiVersion(1);
+    options.AssumeDefaultVersionWhenUnspecified = true;
+    options.ReportApiVersions = true;
+    options.ApiVersionReader = new UrlSegmentApiVersionReader();
+})
+    .AddApiExplorer(options =>
+    {
+        options.GroupNameFormat = "'v'VVV";
+        options.SubstituteApiVersionInUrl = true;
+    });
 
 // Add routing
 builder.Services.AddRouting(options => options.LowercaseUrls = true);
-
-// Add OpenAPI service  
-builder.Services.AddOpenApi();
-
-// Configure database
-builder.Services.AddDbContext<AppDbContext>(options =>
-{
-    options.UseNpgsql(builder.Configuration.GetConnectionString("Database")).UseSnakeCaseNamingConvention();
-});
 
 // Add authentication
 builder.Services.AddAuthentication(options =>
@@ -47,7 +52,38 @@ builder.Services.AddAuthentication(options =>
     options.DefaultAuthenticateScheme = "SessionTokenScheme";
     options.DefaultChallengeScheme = "SessionTokenScheme";
 })
-.AddScheme<AuthenticationSchemeOptions, TokenAuthenticationHandler>("SessionTokenScheme", null);
+    .AddScheme<AuthenticationSchemeOptions, TokenAuthenticationHandler>("SessionTokenScheme", null);
+
+// Add Swagger doc generation
+builder.Services.AddSwaggerGen(options =>
+{
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "Auth Server", Version = "v1" });
+    options.SwaggerDoc("v2", new OpenApiInfo { Title = "Auth Server", Version = "v2" });
+
+    // Add Bearer token authentication to Swagger
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Session token",
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer"
+    });
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type=ReferenceType.SecurityScheme,
+                    Id="Bearer"
+                }
+            },
+            new string[]{}
+        }
+    });
+});
 
 // Add services
 builder.Services.AddSingleton<PasswordHasher<AppUser>>();
@@ -60,12 +96,12 @@ var app = builder.Build();
 // For development environment
 if (app.Environment.IsDevelopment())
 {
-    // Generate Open API spec
-    app.MapOpenApi();
     // Add Swagger UI
+    app.UseSwagger();
     app.UseSwaggerUI(options =>
     {
-        options.SwaggerEndpoint("/openapi/v1.json", "v1");
+        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+        options.SwaggerEndpoint("/swagger/v2/swagger.json", "v2");
     });
 }
 

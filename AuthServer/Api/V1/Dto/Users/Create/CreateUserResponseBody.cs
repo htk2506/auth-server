@@ -1,4 +1,4 @@
-﻿namespace AuthServer.Dto.Users.Create
+﻿namespace AuthServer.Api.V1.Dto.Users.Create
 {
     public class CreateUserResponseBody
     {

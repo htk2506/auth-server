@@ -1,11 +1,13 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using Asp.Versioning;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
 
-namespace AuthServer.Controllers
+namespace AuthServer.Api.V1.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [ApiVersion(1)]
+    [Route("v{version:apiVersion}/[controller]")]
     public class HelloController : ControllerBase
     {
         [HttpGet("unprotected")]
