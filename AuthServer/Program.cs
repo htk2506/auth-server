@@ -55,10 +55,34 @@ builder.Services.AddAuthentication(options =>
     .AddScheme<AuthenticationSchemeOptions, TokenAuthenticationHandler>("SessionTokenScheme", null);
 
 // Add Swagger doc generation
-builder.Services.AddSwaggerGen(c =>
+builder.Services.AddSwaggerGen(options =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Auth Server", Version = "v1" });
-    c.SwaggerDoc("v2", new OpenApiInfo { Title = "Auth Server", Version = "v2" });
+    options.SwaggerDoc("v1", new OpenApiInfo { Title = "Auth Server", Version = "v1" });
+    options.SwaggerDoc("v2", new OpenApiInfo { Title = "Auth Server", Version = "v2" });
+
+    // Add Bearer token authentication to Swagger
+    options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+    {
+        In = ParameterLocation.Header,
+        Description = "Session token",
+        Name = "Authorization",
+        Type = SecuritySchemeType.Http,
+        Scheme = "bearer"
+    });
+    options.AddSecurityRequirement(new OpenApiSecurityRequirement
+    {
+        {
+            new OpenApiSecurityScheme
+            {
+                Reference = new OpenApiReference
+                {
+                    Type=ReferenceType.SecurityScheme,
+                    Id="Bearer"
+                }
+            },
+            new string[]{}
+        }
+    });
 });
 
 // Add services
