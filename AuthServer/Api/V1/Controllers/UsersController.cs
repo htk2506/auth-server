@@ -152,6 +152,16 @@ namespace AuthServer.Api.V1.Controllers
                 AppUser? user = _dbContext.AppUsers.Find(Guid.Parse(userId));
                 if (user == null) { return BadRequest("User not found."); }
 
+                // Generate a new username for the deleted user
+                string newUsername;
+                AppUser? conflictingUser;
+                do
+                {
+                    newUsername = $"deleted_{DateTimeOffset.UtcNow.Ticks.ToString("x").ToLower()}";
+                    conflictingUser = _dbContext.AppUsers.IgnoreQueryFilters().FirstOrDefault(x => x.Username.Equals(newUsername));
+                } while (conflictingUser != null);
+                user.Username = newUsername;
+
                 // Delete the user
                 _dbContext.AppUsers.Remove(user);
                 await _dbContext.SaveChangesAsync();
