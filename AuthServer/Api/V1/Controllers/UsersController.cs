@@ -33,9 +33,8 @@ namespace AuthServer.Api.V1.Controllers
         {
             try
             {
-                // Check if username already taken (even by a deleted user) 
-                AppUser? existingUser = _dbContext.AppUsers.IgnoreQueryFilters().FirstOrDefault(x => x.Username.Equals(requestBody.Username.ToLower()));
-                if (existingUser != null) { return BadRequest("Username not available."); }
+                // Check if username already taken 
+                if (IsUsernameTaken(requestBody.Username)) { return BadRequest("Username not available."); }
 
                 // Create user to store
                 AppUser user = new AppUser
@@ -107,11 +106,10 @@ namespace AuthServer.Api.V1.Controllers
                 AppUser? user = _dbContext.AppUsers.Find(Guid.Parse(userId));
                 if (user == null) { return BadRequest("User not found."); }
 
-                // Check if new username already taken (even by a deleted user) 
+                // Check if new username already taken
                 if (!user.Username.ToLower().Equals(requestBody.Username.ToLower()))
                 {
-                    AppUser? existingUser = _dbContext.AppUsers.IgnoreQueryFilters().FirstOrDefault(x => x.Username.Equals(requestBody.Username.ToLower()));
-                    if (existingUser != null) { return BadRequest("Username not available."); }
+                    if (IsUsernameTaken(requestBody.Username)) { return BadRequest("Username not available."); }
                 }
 
                 // Modify the user
@@ -152,6 +150,14 @@ namespace AuthServer.Api.V1.Controllers
                 AppUser? user = _dbContext.AppUsers.Find(Guid.Parse(userId));
                 if (user == null) { return BadRequest("User not found."); }
 
+                // Generate a new username for the deleted user
+                string newUsername;
+                do
+                {
+                    newUsername = $"deleted_{DateTimeOffset.UtcNow.Ticks.ToString("x").ToLower()}";
+                } while (IsUsernameTaken(newUsername));
+                user.Username = newUsername;
+
                 // Delete the user
                 _dbContext.AppUsers.Remove(user);
                 await _dbContext.SaveChangesAsync();
@@ -164,6 +170,18 @@ namespace AuthServer.Api.V1.Controllers
                 Console.Error.WriteLine(ex);
                 return Problem("Error occurred.");
             }
+        }
+
+        /// <summary>
+        /// Checks if the username is taken by an existing or soft-deleted user.
+        /// </summary>
+        /// <param name="username"></param>
+        /// <returns>True if username is taken and false otherwise.</returns>
+        private bool IsUsernameTaken(string username)
+        {
+            // Check if a user exists with the username
+            AppUser? existingUser = _dbContext.AppUsers.IgnoreQueryFilters().FirstOrDefault(x => x.Username.Equals(username.ToLower()));
+            return existingUser != null;
         }
     }
 }
