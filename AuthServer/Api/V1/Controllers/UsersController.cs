@@ -5,6 +5,7 @@ using AuthServer.Api.V1.Dto.Users.Update;
 using AuthServer.Database;
 using AuthServer.Database.Models;
 using AuthServer.Helpers;
+using AuthServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -20,11 +21,13 @@ namespace AuthServer.Api.V1.Controllers
     {
         private readonly AppDbContext _dbContext;
         private readonly PasswordHasher<AppUser> _passwordHasher;
+        private readonly EmailService _emailService;
 
-        public UsersController(AppDbContext dbContext, PasswordHasher<AppUser> passwordHasher)
+        public UsersController(AppDbContext dbContext, PasswordHasher<AppUser> passwordHasher, EmailService emailService)
         {
             _dbContext = dbContext;
             _passwordHasher = passwordHasher;
+            _emailService = emailService;
         }
 
         #region v1/users
@@ -216,6 +219,24 @@ namespace AuthServer.Api.V1.Controllers
             }
         }
         #endregion
+
+        [Authorize]
+        [HttpGet("test-email")]
+        public async Task<IActionResult> TestEmail([FromQuery] string recipientName, [FromQuery] string recipientEmail)
+        {
+            try
+            {
+                Console.Write("Sending email");
+                _emailService.SendTestEmail(recipientName, recipientEmail);
+
+                return Ok("Testing");
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex);
+                return Problem("Error occurred.");
+            }
+        }
 
         /// <summary>
         /// Checks if the username is taken by an existing or soft-deleted user.
