@@ -27,6 +27,7 @@ namespace AuthServer.Api.V1.Controllers
             _passwordHasher = passwordHasher;
         }
 
+        #region v1/users
         [HttpPost]
         [ProducesResponseType(typeof(CreateUserResponseBody), StatusCodes.Status200OK)]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserRequestBody requestBody)
@@ -66,7 +67,9 @@ namespace AuthServer.Api.V1.Controllers
                 return Problem("Error occurred.");
             }
         }
+        #endregion
 
+        #region v1/users/me
         [Authorize]
         [HttpGet("me")]
         [ProducesResponseType(typeof(GetUserResponseBody), StatusCodes.Status200OK)]
@@ -171,6 +174,45 @@ namespace AuthServer.Api.V1.Controllers
                 return Problem("Error occurred.");
             }
         }
+        #endregion
+
+        #region v1/users/me/password
+        [Authorize]
+        [HttpPut("me/password")]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        public async Task<IActionResult> UpdatePassword([FromBody] UpdateUserPasswordRequestBody requestBody)
+        {
+            try
+            {
+                // Get the user
+                string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+                AppUser? user = _dbContext.AppUsers.Find(Guid.Parse(userId));
+                if (user == null) { return BadRequest("User not found."); }
+
+                // Verify old password is correct
+                PasswordVerificationResult passwordVerificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, requestBody.OldPassword);
+                if (passwordVerificationResult != PasswordVerificationResult.Success) { return Unauthorized("Invalid credentials."); }
+
+                // Modify the user
+                user.PasswordHash = _passwordHasher.HashPassword(user, requestBody.NewPassword);
+
+                // Validate the user model
+                TryValidateModel(user);
+                if (!ModelState.IsValid) { return BadRequest(Utils.GetModelErrors(ModelState)); }
+
+                // Save changes to the database
+                await _dbContext.SaveChangesAsync();
+
+                // Return success
+                return Ok(true);
+            }
+            catch (Exception ex)
+            {
+                Console.Error.WriteLine(ex);
+                return Problem("Error occurred.");
+            }
+        }
+        #endregion
 
         /// <summary>
         /// Checks if the username is taken by an existing or soft-deleted user.
