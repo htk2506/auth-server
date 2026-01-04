@@ -49,10 +49,10 @@ builder.Services.AddRouting(options => options.LowercaseUrls = true);
 // Add authentication
 builder.Services.AddAuthentication(options =>
 {
-    options.DefaultAuthenticateScheme = "SessionTokenScheme";
-    options.DefaultChallengeScheme = "SessionTokenScheme";
+    options.DefaultAuthenticateScheme = "SessionJwtScheme";
+    options.DefaultChallengeScheme = "SessionJwtScheme";
 })
-    .AddScheme<AuthenticationSchemeOptions, TokenAuthenticationHandler>("SessionTokenScheme", null);
+    .AddScheme<AuthenticationSchemeOptions, SessionJwtAuthenticationHandler>("SessionJwtScheme", null);
 
 // Add Swagger doc generation
 builder.Services.AddSwaggerGen(options =>
@@ -87,7 +87,7 @@ builder.Services.AddSwaggerGen(options =>
 
 // Add services
 builder.Services.AddSingleton<PasswordHasher<AppUser>>();
-builder.Services.AddSingleton<JwtTokenService>();
+builder.Services.AddSingleton<JwtService>();
 #endregion
 
 #region Configure the app

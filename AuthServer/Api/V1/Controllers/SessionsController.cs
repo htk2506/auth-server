@@ -19,19 +19,19 @@ namespace AuthServer.Api.V1.Controllers
         private readonly IConfiguration _configuration;
         private readonly AppDbContext _dbContext;
         private readonly PasswordHasher<AppUser> _passwordHasher;
-        private readonly JwtTokenService _tokenService;
+        private readonly JwtService _jwtService;
 
         public SessionsController(
             IConfiguration configuration,
             AppDbContext dbContext,
             PasswordHasher<AppUser> passwordHasher,
-            JwtTokenService tokenService
+            JwtService jwtService
         )
         {
             _configuration = configuration;
             _dbContext = dbContext;
             _passwordHasher = passwordHasher;
-            _tokenService = tokenService;
+            _jwtService = jwtService;
         }
 
         [HttpPost("login")]
@@ -68,7 +68,7 @@ namespace AuthServer.Api.V1.Controllers
                 await _dbContext.SaveChangesAsync();
 
                 // Generate a session token with user ID as subject and session ID as JTI
-                string sessionToken = _tokenService.GenerateJwtToken(user.Id.ToString(), session.Id.ToString(), expiration);
+                string sessionToken = _jwtService.GenerateJwt(user.Id.ToString(), session.Id.ToString(), expiration);
 
                 // Return token 
                 return Ok(new LoginUserResponseBody { SessionToken = sessionToken });
