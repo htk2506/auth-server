@@ -18,7 +18,11 @@ namespace AuthServer.Database
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<AppUser>().HasQueryFilter(x => !x.IsDeleted);
+            // Filter out soft-deleted users
+            modelBuilder.Entity<AppUser>().HasQueryFilter(appUser => !appUser.IsDeleted);
+
+            // Filter out sessions for soft-deleted users
+            modelBuilder.Entity<UserSession>().HasQueryFilter(userSession => !userSession.AppUser.IsDeleted);
 
             base.OnModelCreating(modelBuilder);
         }
