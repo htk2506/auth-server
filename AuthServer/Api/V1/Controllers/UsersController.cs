@@ -190,7 +190,7 @@ namespace AuthServer.Api.V1.Controllers
                 if (user == null) { return BadRequest("User not found."); }
 
                 // Verify old password is correct
-                PasswordVerificationResult passwordVerificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, requestBody.OldPassword);
+                PasswordVerificationResult passwordVerificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, requestBody.CurrentPassword);
                 if (passwordVerificationResult != PasswordVerificationResult.Success) { return Unauthorized("Invalid credentials."); }
 
                 // Modify the user
