@@ -5,13 +5,13 @@ using System.Security.Cryptography;
 
 namespace AuthServer.Services
 {
-    public class JwtTokenService
+    public class JwtService
     {
         private readonly IConfiguration _configuration;
         private readonly RsaSecurityKey _privateKey;
         private readonly RsaSecurityKey _publicKey;
 
-        public JwtTokenService(IConfiguration configuration)
+        public JwtService(IConfiguration configuration)
         {
             _configuration = configuration;
 
@@ -24,7 +24,7 @@ namespace AuthServer.Services
             _publicKey = new RsaSecurityKey(rsaPublic);
         }
 
-        public string GenerateJwtToken(string userId, string jti, DateTimeOffset expiration)
+        public string GenerateJwt(string userId, string jti, DateTimeOffset expiration)
         {
             var claims = new[]
             {
@@ -45,7 +45,7 @@ namespace AuthServer.Services
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
-        public bool ValidateJwtToken(string token, out JwtSecurityToken? jwt)
+        public bool ValidateJwt(string token, out JwtSecurityToken? jwt)
         {
             var validationParameters = new TokenValidationParameters
             {

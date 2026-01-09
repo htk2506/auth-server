@@ -190,7 +190,7 @@ namespace AuthServer.Api.V1.Controllers
                 if (user == null) { return BadRequest("User not found."); }
 
                 // Verify old password is correct
-                PasswordVerificationResult passwordVerificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, requestBody.OldPassword);
+                PasswordVerificationResult passwordVerificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, requestBody.CurrentPassword);
                 if (passwordVerificationResult != PasswordVerificationResult.Success) { return Unauthorized("Invalid credentials."); }
 
                 // Modify the user
@@ -202,6 +202,9 @@ namespace AuthServer.Api.V1.Controllers
 
                 // Save changes to the database
                 await _dbContext.SaveChangesAsync();
+
+                // Log user out of their sessions
+                EndSessionsOfUser(user);
 
                 // Return success
                 return Ok(true);
@@ -224,6 +227,17 @@ namespace AuthServer.Api.V1.Controllers
             // Check if a user exists with the username
             AppUser? existingUser = _dbContext.AppUsers.IgnoreQueryFilters().FirstOrDefault(x => x.Username.Equals(username.ToLower()));
             return existingUser != null;
+        }
+
+        /// <summary>
+        /// Ends all of a user's sessions.  
+        /// </summary>
+        /// <param name="user"></param>
+        private void EndSessionsOfUser(AppUser user)
+        {
+            var sessions = _dbContext.UserSessions.Where(userSession => userSession.AppUser == user);
+            _dbContext.UserSessions.RemoveRange(sessions);
+            _dbContext.SaveChanges();
         }
     }
 }
