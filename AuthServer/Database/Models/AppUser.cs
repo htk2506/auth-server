@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 namespace AuthServer.Database.Models
 {
     [Index(nameof(Username), IsUnique = true)]
+    [Index(nameof(Email), IsUnique = true)]
     public class AppUser : ICreateModifyTimestampable, ISoftDeletable
     {
         [Key]
@@ -14,6 +15,9 @@ namespace AuthServer.Database.Models
         [MaxLength(32)]
         [RegularExpression(@"^[a-z0-9](_?[a-z0-9])*$")]
         public string Username { get; set; } = null!;
+
+        [EmailAddress]
+        public string? Email { get; set; }
 
         [Required]
         public string PasswordHash { get; set; } = null!;
