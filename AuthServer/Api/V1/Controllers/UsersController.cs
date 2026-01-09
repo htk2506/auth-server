@@ -40,11 +40,15 @@ namespace AuthServer.Api.V1.Controllers
                 // Check if username already taken 
                 if (IsUsernameTaken(requestBody.Username)) { return BadRequest("Username not available."); }
 
+                // Check if email already taken 
+                if (IsEmailTaken(requestBody.Email)) { return BadRequest("Email not available."); }
+
                 // Create user to store
                 AppUser user = new AppUser
                 {
                     Username = requestBody.Username.ToLower(),
-                    Note = requestBody.Note
+                    Email = requestBody.Email?.ToLower(),
+                    Note = requestBody.Note,
                 };
                 user.PasswordHash = _passwordHasher.HashPassword(user, requestBody.Password);
 
@@ -61,7 +65,8 @@ namespace AuthServer.Api.V1.Controllers
                 {
                     Id = user.Id,
                     Username = user.Username,
-                    Note = user.Note
+                    Email = user.Email,
+                    Note = user.Note,
                 });
             }
             catch (Exception ex)
@@ -89,8 +94,9 @@ namespace AuthServer.Api.V1.Controllers
                 return Ok(new GetUserResponseBody
                 {
                     Id = user.Id,
+                    Email = user.Email,
                     Username = user.Username,
-                    Note = user.Note
+                    Note = user.Note,
                 });
             }
             catch (Exception ex)
@@ -118,8 +124,15 @@ namespace AuthServer.Api.V1.Controllers
                     if (IsUsernameTaken(requestBody.Username)) { return BadRequest("Username not available."); }
                 }
 
+                // Check if new email already taken
+                if (!(requestBody.Email == null || requestBody.Email.ToLower() == user.Email?.ToLower()))
+                {
+                    if (IsEmailTaken(requestBody.Email)) { return BadRequest("Email not available."); }
+                }
+
                 // Modify the user
                 user.Username = requestBody.Username.ToLower();
+                user.Email = requestBody.Email?.ToLower();
                 user.Note = requestBody.Note;
 
                 // Validate the user model
@@ -134,7 +147,8 @@ namespace AuthServer.Api.V1.Controllers
                 {
                     Id = user.Id,
                     Username = user.Username,
-                    Note = user.Note
+                    Email = user.Email,
+                    Note = user.Note,
                 });
             }
             catch (Exception ex)
@@ -163,6 +177,9 @@ namespace AuthServer.Api.V1.Controllers
                     newUsername = $"deleted_{DateTimeOffset.UtcNow.Ticks.ToString("x").ToLower()}";
                 } while (IsUsernameTaken(newUsername));
                 user.Username = newUsername;
+
+                // Remove the email
+                user.Email = null;
 
                 // Delete the user
                 _dbContext.AppUsers.Remove(user);
@@ -247,6 +264,20 @@ namespace AuthServer.Api.V1.Controllers
         {
             // Check if a user exists with the username
             AppUser? existingUser = _dbContext.AppUsers.IgnoreQueryFilters().FirstOrDefault(x => x.Username.Equals(username.ToLower()));
+            return existingUser != null;
+        }
+
+        /// <summary>
+        /// Checks if the email is taken by an existing or soft-deleted user.
+        /// </summary>
+        /// <param name="email"></param>
+        /// <returns>True if email is taken and false otherwise.</returns>
+        private bool IsEmailTaken(string? email)
+        {
+            if (email == null) { return false; }
+
+            // Check if a user exists with the email
+            AppUser? existingUser = _dbContext.AppUsers.IgnoreQueryFilters().FirstOrDefault(x => x.Email == email.ToLower());
             return existingUser != null;
         }
 
