@@ -283,7 +283,7 @@ namespace AuthServer.Api.V1.Controllers
             {
                 AppUser = existingUser,
                 TokenHash = tokenHash,
-                ExpiresAt = DateTimeOffset.UtcNow.AddDays(_configuration.GetValue<int>("Jwt:SessionDays"))
+                ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(_configuration.GetValue<int>("PasswordResetToken:Minutes"))
             };
             TryValidateModel(passwordResetToken);
             if (!ModelState.IsValid) { return BadRequest(Utils.GetModelErrors(ModelState)); }
