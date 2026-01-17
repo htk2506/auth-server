@@ -1,4 +1,5 @@
 ﻿using AuthServer.Database.Models;
+using AuthServer.Helpers;
 using MailKit.Net.Smtp;
 using MimeKit;
 using System.Text.Json;
@@ -56,7 +57,7 @@ namespace AuthServer.Services
                     Id = user.Id,
                     Username = user.Username,
                     PasswordResetToken = token
-                })
+                }, Utils.DefaultJsonSerializerOptions)
             };
 
             await SendEmailViaSmtp(email);

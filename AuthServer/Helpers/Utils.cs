@@ -1,9 +1,28 @@
 ﻿using Microsoft.AspNetCore.Mvc.ModelBinding;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace AuthServer.Helpers
 {
     public static class Utils
     {
+        /// <summary>
+        /// Default options to use for JSON serialization. 
+        /// </summary>
+        public static readonly JsonSerializerOptions DefaultJsonSerializerOptions;
+
+        static Utils()
+        {
+            DefaultJsonSerializerOptions = new JsonSerializerOptions
+            {
+                WriteIndented = true,
+                PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower,
+                PropertyNameCaseInsensitive = true,
+            };
+            DefaultJsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+
+        }
+
         /// <summary>
         /// Extracts a list of errors from a model state.
         /// </summary>
