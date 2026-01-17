@@ -49,10 +49,10 @@ namespace AuthServer.Api.V1.Controllers
             try
             {
                 // Check if username already taken 
-                if (IsUsernameTaken(requestBody.Username)) { return BadRequest("Username not available."); }
+                if (await IsUsernameTaken(requestBody.Username)) { return BadRequest("Username not available."); }
 
                 // Check if email already taken 
-                if (IsEmailTaken(requestBody.Email)) { return BadRequest("Email not available."); }
+                if (await IsEmailTaken(requestBody.Email)) { return BadRequest("Email not available."); }
 
                 // Create user to store
                 AppUser user = new AppUser
@@ -68,7 +68,7 @@ namespace AuthServer.Api.V1.Controllers
                 if (!ModelState.IsValid) { return BadRequest(Utils.GetModelErrors(ModelState)); }
 
                 // Save user to database
-                _dbContext.AppUsers.Add(user);
+                await _dbContext.AppUsers.AddAsync(user);
                 await _dbContext.SaveChangesAsync();
 
                 // Return success
@@ -98,7 +98,7 @@ namespace AuthServer.Api.V1.Controllers
             {
                 // Get the user
                 string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                AppUser? user = _dbContext.AppUsers.Find(Guid.Parse(userId));
+                AppUser? user = await _dbContext.AppUsers.FindAsync(Guid.Parse(userId));
                 if (user == null) { return BadRequest("User not found."); }
 
                 // Return success
@@ -126,19 +126,19 @@ namespace AuthServer.Api.V1.Controllers
             {
                 // Get the user
                 string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                AppUser? user = _dbContext.AppUsers.Find(Guid.Parse(userId));
+                AppUser? user = await _dbContext.AppUsers.FindAsync(Guid.Parse(userId));
                 if (user == null) { return BadRequest("User not found."); }
 
                 // Check if new username already taken
                 if (!user.Username.ToLower().Equals(requestBody.Username.ToLower()))
                 {
-                    if (IsUsernameTaken(requestBody.Username)) { return BadRequest("Username not available."); }
+                    if (await IsUsernameTaken(requestBody.Username)) { return BadRequest("Username not available."); }
                 }
 
                 // Check if new email already taken
                 if (!(requestBody.Email == null || requestBody.Email.ToLower() == user.Email?.ToLower()))
                 {
-                    if (IsEmailTaken(requestBody.Email)) { return BadRequest("Email not available."); }
+                    if (await IsEmailTaken(requestBody.Email)) { return BadRequest("Email not available."); }
                 }
 
                 // Modify the user
@@ -178,7 +178,7 @@ namespace AuthServer.Api.V1.Controllers
             {
                 // Get the user
                 string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                AppUser? user = _dbContext.AppUsers.Find(Guid.Parse(userId));
+                AppUser? user = await _dbContext.AppUsers.FindAsync(Guid.Parse(userId));
                 if (user == null) { return BadRequest("User not found."); }
 
                 // Generate a new username for the deleted user
@@ -186,7 +186,7 @@ namespace AuthServer.Api.V1.Controllers
                 do
                 {
                     newUsername = $"deleted_{DateTimeOffset.UtcNow.Ticks.ToString("x").ToLower()}";
-                } while (IsUsernameTaken(newUsername));
+                } while (await IsUsernameTaken(newUsername));
                 user.Username = newUsername;
 
                 // Remove the email
@@ -217,7 +217,7 @@ namespace AuthServer.Api.V1.Controllers
             {
                 // Get the user
                 string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                AppUser? user = _dbContext.AppUsers.Find(Guid.Parse(userId));
+                AppUser? user = await _dbContext.AppUsers.FindAsync(Guid.Parse(userId));
                 if (user == null) { return BadRequest("User not found."); }
 
                 // Verify old password is correct
@@ -235,7 +235,7 @@ namespace AuthServer.Api.V1.Controllers
                 await _dbContext.SaveChangesAsync();
 
                 // Log user out of their sessions
-                EndSessionsOfUser(user);
+                await EndSessionsOfUser(user);
 
                 // Return success
                 return Ok(true);
@@ -271,7 +271,7 @@ namespace AuthServer.Api.V1.Controllers
         public async Task<IActionResult> StartPasswordReset([FromQuery] StartPasswordResetRequestBody requestBody)
         {
             // Get the user the email belongs to
-            AppUser? existingUser = _dbContext.AppUsers.FirstOrDefault(x => x.Email == requestBody.Email.ToLower());
+            AppUser? existingUser = await _dbContext.AppUsers.FirstOrDefaultAsync(x => x.Email == requestBody.Email.ToLower());
             if (existingUser == null) { return BadRequest("User not found."); }
 
             // Generate the password reset token and its hash
@@ -299,10 +299,10 @@ namespace AuthServer.Api.V1.Controllers
         /// </summary>
         /// <param name="username"></param>
         /// <returns>True if username is taken and false otherwise.</returns>
-        private bool IsUsernameTaken(string username)
+        private async Task<bool> IsUsernameTaken(string username)
         {
             // Check if a user exists with the username
-            AppUser? existingUser = _dbContext.AppUsers.IgnoreQueryFilters().FirstOrDefault(x => x.Username.Equals(username.ToLower()));
+            AppUser? existingUser = await _dbContext.AppUsers.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Username.Equals(username.ToLower()));
             return existingUser != null;
         }
 
@@ -311,12 +311,12 @@ namespace AuthServer.Api.V1.Controllers
         /// </summary>
         /// <param name="email"></param>
         /// <returns>True if email is taken and false otherwise.</returns>
-        private bool IsEmailTaken(string? email)
+        private async Task<bool> IsEmailTaken(string? email)
         {
             if (email == null) { return false; }
 
             // Check if a user exists with the email
-            AppUser? existingUser = _dbContext.AppUsers.IgnoreQueryFilters().FirstOrDefault(x => x.Email == email.ToLower());
+            AppUser? existingUser = await _dbContext.AppUsers.IgnoreQueryFilters().FirstOrDefaultAsync(x => x.Email == email.ToLower());
             return existingUser != null;
         }
 
@@ -324,11 +324,11 @@ namespace AuthServer.Api.V1.Controllers
         /// Ends all of a user's sessions.  
         /// </summary>
         /// <param name="user"></param>
-        private void EndSessionsOfUser(AppUser user)
+        private async Task EndSessionsOfUser(AppUser user)
         {
-            var sessions = _dbContext.UserSessions.Where(userSession => userSession.AppUser == user);
+            var sessions = await _dbContext.UserSessions.Where(userSession => userSession.AppUser == user).ToListAsync();
             _dbContext.UserSessions.RemoveRange(sessions);
-            _dbContext.SaveChanges();
+            await _dbContext.SaveChangesAsync();
         }
     }
 }
