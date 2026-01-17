@@ -248,24 +248,7 @@ namespace AuthServer.Api.V1.Controllers
         }
         #endregion
 
-        [Authorize]
-        [HttpGet("test-email")]
-        public async Task<IActionResult> TestEmail([FromQuery] string recipientName, [FromQuery] string recipientEmail)
-        {
-            try
-            {
-                Console.Write("Sending email");
-                await _emailService.SendTestEmail(recipientName, recipientEmail);
-
-                return Ok("Testing");
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine(ex);
-                return Problem("Error occurred.");
-            }
-        }
-
+        #region v1/users/password-reset-request
         [HttpPost("password-reset-request")]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
         public async Task<IActionResult> StartPasswordReset([FromBody] StartPasswordResetRequestBody requestBody)
@@ -292,8 +275,52 @@ namespace AuthServer.Api.V1.Controllers
 
             // Send the email
             await _emailService.SendPasswordResetTokenEmail(existingUser, token);
+
+            // Return success
             return Ok("Email sent.");
         }
+        #endregion
+
+        #region v1/users/password-reset
+        [HttpPost("password-reset")]
+        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        public async Task<IActionResult> ResetPassword([FromBody] PasswordResetRequestBody requestBody)
+        {
+            // Get the user for the request
+            AppUser? existingUser = await _dbContext.AppUsers.FindAsync(requestBody.Id);
+            if (existingUser == null) { return BadRequest("User not found."); }
+
+            // Get list of unexpired password reset tokens that belong to the user
+            List<PasswordResetToken> passwordResetTokens = await _dbContext.PasswordResetTokens
+                .Where(x => DateTimeOffset.UtcNow < x.ExpiresAt && x.AppUser == existingUser)
+                .ToListAsync();
+
+            // Check if passed in token matches any of the token hashes 
+            PasswordResetToken? validPasswordResetToken = passwordResetTokens
+                .Find(x => _tokenService.VerifyHashedToken(existingUser, x.TokenHash, requestBody.PasswordResetToken));
+            if (validPasswordResetToken == null) { return Unauthorized("Invalid password reset token."); }
+
+            // Set new password
+            existingUser.PasswordHash = _passwordHasher.HashPassword(existingUser, requestBody.NewPassword);
+            TryValidateModel(existingUser);
+            if (!ModelState.IsValid) { return BadRequest(Utils.GetModelErrors(ModelState)); }
+
+            // Delete other password reset tokens
+            List<PasswordResetToken> otherPasswordResetTokens = await _dbContext.PasswordResetTokens
+                .Where(x => x.AppUser == existingUser)
+                .ToListAsync();
+            _dbContext.PasswordResetTokens.RemoveRange(otherPasswordResetTokens);
+
+            // Save changes
+            await _dbContext.SaveChangesAsync();
+
+            // Log user out of all existing sessions
+            await EndSessionsOfUser(existingUser);
+
+            // Return success
+            return Ok(true);
+        }
+        #endregion
 
         /// <summary>
         /// Checks if the username is taken by an existing or soft-deleted user.
@@ -327,7 +354,7 @@ namespace AuthServer.Api.V1.Controllers
         /// <param name="user"></param>
         private async Task EndSessionsOfUser(AppUser user)
         {
-            var sessions = await _dbContext.UserSessions.Where(userSession => userSession.AppUser == user).ToListAsync();
+            List<UserSession> sessions = await _dbContext.UserSessions.Where(userSession => userSession.AppUser == user).ToListAsync();
             _dbContext.UserSessions.RemoveRange(sessions);
             await _dbContext.SaveChangesAsync();
         }
