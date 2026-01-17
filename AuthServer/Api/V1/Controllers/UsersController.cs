@@ -1,6 +1,7 @@
 ﻿using Asp.Versioning;
 using AuthServer.Api.V1.Dto.Users.Create;
 using AuthServer.Api.V1.Dto.Users.Get;
+using AuthServer.Api.V1.Dto.Users.PasswordReset;
 using AuthServer.Api.V1.Dto.Users.Update;
 using AuthServer.Database;
 using AuthServer.Database.Models;
@@ -19,15 +20,25 @@ namespace AuthServer.Api.V1.Controllers
     [Route("v{version:apiVersion}/[controller]")]
     public class UsersController : ControllerBase
     {
+        private readonly IConfiguration _configuration;
         private readonly AppDbContext _dbContext;
         private readonly PasswordHasher<AppUser> _passwordHasher;
         private readonly EmailService _emailService;
+        private readonly TokenService _tokenService;
 
-        public UsersController(AppDbContext dbContext, PasswordHasher<AppUser> passwordHasher, EmailService emailService)
+        public UsersController(
+            IConfiguration configuration,
+            AppDbContext dbContext,
+            PasswordHasher<AppUser> passwordHasher,
+            EmailService emailService,
+            TokenService tokenService
+        )
         {
+            _configuration = configuration;
             _dbContext = dbContext;
             _passwordHasher = passwordHasher;
             _emailService = emailService;
+            _tokenService = tokenService;
         }
 
         #region v1/users
@@ -244,7 +255,7 @@ namespace AuthServer.Api.V1.Controllers
             try
             {
                 Console.Write("Sending email");
-                _emailService.SendTestEmail(recipientName, recipientEmail);
+                await _emailService.SendTestEmail(recipientName, recipientEmail);
 
                 return Ok("Testing");
             }
@@ -253,6 +264,34 @@ namespace AuthServer.Api.V1.Controllers
                 Console.Error.WriteLine(ex);
                 return Problem("Error occurred.");
             }
+        }
+
+        [HttpPost("password-reset-request")]
+        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        public async Task<IActionResult> StartPasswordReset([FromQuery] StartPasswordResetRequestBody requestBody)
+        {
+            // Get the user the email belongs to
+            AppUser? existingUser = _dbContext.AppUsers.FirstOrDefault(x => x.Email == requestBody.Email.ToLower());
+            if (existingUser == null) { return BadRequest("User not found."); }
+
+            // Generate the password reset token and its hash
+            string token = _tokenService.GenerateToken();
+            string tokenHash = _tokenService.GenerateTokenHash(existingUser, token);
+
+            // Save to the database to use later
+            PasswordResetToken passwordResetToken = new PasswordResetToken
+            {
+                AppUser = existingUser,
+                TokenHash = tokenHash,
+                ExpiresAt = DateTimeOffset.UtcNow.AddDays(_configuration.GetValue<int>("Jwt:SessionDays"))
+            };
+            TryValidateModel(passwordResetToken);
+            if (!ModelState.IsValid) { return BadRequest(Utils.GetModelErrors(ModelState)); }
+            await _dbContext.SaveChangesAsync();
+
+            // Send the email
+            await _emailService.SendPasswordResetTokenEmail(existingUser, token);
+            return Ok("Email sent.");
         }
 
         /// <summary>

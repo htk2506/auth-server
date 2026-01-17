@@ -1,5 +1,7 @@
-﻿using MailKit.Net.Smtp;
+﻿using AuthServer.Database.Models;
+using MailKit.Net.Smtp;
 using MimeKit;
+using System.Text.Json;
 
 namespace AuthServer.Services
 {
@@ -12,10 +14,9 @@ namespace AuthServer.Services
             _configuration = configuration;
         }
 
-        public void SendTestEmail(string recipientName, string recipientEmailAddress)
+        public async Task SendTestEmail(string recipientName, string recipientEmailAddress)
         {
             var email = new MimeMessage();
-
             email.From.Add(new MailboxAddress(_configuration["Email:SenderName"], _configuration["Email:SenderEmailAddress"]));
             email.To.Add(new MailboxAddress(recipientName, recipientEmailAddress));
 
@@ -25,22 +26,59 @@ namespace AuthServer.Services
                 Text = "<p>Hello world</p>"
             };
 
-            SendEmailViaSmtp(email);
+            await SendEmailViaSmtp(email);
         }
 
-        private void SendEmailViaSmtp(MimeMessage email)
+        /// <summary>
+        /// Sends a user an email with a token for resetting their password.
+        /// </summary>
+        /// <param name="user"></param>
+        /// <param name="token"></param>
+        /// <exception cref="NullReferenceException"></exception>
+        public async Task SendPasswordResetTokenEmail(AppUser user, string token)
+        {
+            // Make sure user has an email
+            if (user.Email == null) { throw new NullReferenceException("User doesn't email address."); }
+
+            // Construct email
+            var email = new MimeMessage();
+
+            // Set sender and recipient
+            email.From.Add(new MailboxAddress(_configuration["Email:SenderName"], _configuration["Email:SenderEmailAddress"]));
+            email.To.Add(new MailboxAddress(user.Username, user.Email));
+
+            // Set the subject and body
+            email.Subject = "Password Reset Token";
+            email.Body = new TextPart(MimeKit.Text.TextFormat.Text)
+            {
+                Text = JsonSerializer.Serialize(new
+                {
+                    Id = user.Id,
+                    Username = user.Username,
+                    PasswordResetToken = token
+                })
+            };
+
+            await SendEmailViaSmtp(email);
+        }
+
+        /// <summary>
+        /// Sends an email using an SMTP server.
+        /// </summary>
+        /// <param name="email">The email to send.</param>
+        private async Task SendEmailViaSmtp(MimeMessage email)
         {
             using (var smtp = new SmtpClient())
             {
                 // Connect to SMTP server
-                smtp.Connect(_configuration["Email:SmtpHost"], _configuration.GetValue<int>("Email:SmtpPort"));
-                smtp.Authenticate(_configuration["Email:SmtpUsername"], _configuration["Email:SmtpPassword"]);
+                await smtp.ConnectAsync(_configuration["Email:SmtpHost"], _configuration.GetValue<int>("Email:SmtpPort"));
+                await smtp.AuthenticateAsync(_configuration["Email:SmtpUsername"], _configuration["Email:SmtpPassword"]);
 
                 // Send email
-                smtp.Send(email);
+                await smtp.SendAsync(email);
 
                 // Disconnect
-                smtp.Disconnect(true);
+                await smtp.DisconnectAsync(true);
             }
         }
     }
