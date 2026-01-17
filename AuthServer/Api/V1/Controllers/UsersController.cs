@@ -287,6 +287,7 @@ namespace AuthServer.Api.V1.Controllers
             };
             TryValidateModel(passwordResetToken);
             if (!ModelState.IsValid) { return BadRequest(Utils.GetModelErrors(ModelState)); }
+            await _dbContext.PasswordResetTokens.AddAsync(passwordResetToken);
             await _dbContext.SaveChangesAsync();
 
             // Send the email

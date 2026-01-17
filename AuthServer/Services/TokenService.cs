@@ -1,6 +1,7 @@
 ﻿using AuthServer.Database.Models;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 
 namespace AuthServer.Services
 {
@@ -25,7 +26,10 @@ namespace AuthServer.Services
             {
                 byte[] tokenData = new byte[32];
                 rng.GetBytes(tokenData);
-                return Convert.ToBase64String(tokenData);
+                string base64Str = Convert.ToBase64String(tokenData);
+                
+                // Replace non-alphanumeric characters
+                return Regex.Replace(base64Str, @"[\W]", "");
             }
         }
 
