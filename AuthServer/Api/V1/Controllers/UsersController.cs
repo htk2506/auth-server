@@ -268,7 +268,7 @@ namespace AuthServer.Api.V1.Controllers
 
         [HttpPost("password-reset-request")]
         [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
-        public async Task<IActionResult> StartPasswordReset([FromQuery] StartPasswordResetRequestBody requestBody)
+        public async Task<IActionResult> StartPasswordReset([FromBody] StartPasswordResetRequestBody requestBody)
         {
             // Get the user the email belongs to
             AppUser? existingUser = await _dbContext.AppUsers.FirstOrDefaultAsync(x => x.Email == requestBody.Email.ToLower());
