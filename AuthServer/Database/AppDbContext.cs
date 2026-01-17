@@ -10,6 +10,7 @@ namespace AuthServer.Database
         // Models 
         public DbSet<AppUser> AppUsers { get; set; }
         public DbSet<UserSession> UserSessions { get; set; }
+        public DbSet<PasswordResetToken> PasswordResetTokens { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -23,6 +24,9 @@ namespace AuthServer.Database
 
             // Filter out sessions for soft-deleted users
             modelBuilder.Entity<UserSession>().HasQueryFilter(userSession => !userSession.AppUser.IsDeleted);
+
+            // Filter out password reset tokens for soft-deleted users
+            modelBuilder.Entity<PasswordResetToken>().HasQueryFilter(passwordResetToken => !passwordResetToken.AppUser.IsDeleted);
 
             base.OnModelCreating(modelBuilder);
         }

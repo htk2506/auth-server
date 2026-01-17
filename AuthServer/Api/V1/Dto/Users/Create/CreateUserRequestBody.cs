@@ -10,6 +10,9 @@ namespace AuthServer.Api.V1.Dto.Users.Create
         [RegularExpression(@"^[A-Za-z0-9](_?[A-Za-z0-9])*$")]
         public string Username { get; set; } = null!;
 
+        [EmailAddress]
+        public string? Email { get; set; }
+
         [Required]
         public string Password { get; set; } = null!;
 

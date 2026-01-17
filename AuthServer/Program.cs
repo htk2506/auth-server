@@ -24,6 +24,7 @@ builder.Services.AddControllers()
     .AddJsonOptions(options =>
     {
         // Configure JSON options
+        options.JsonSerializerOptions.WriteIndented = true;
         options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
         options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
@@ -88,6 +89,8 @@ builder.Services.AddSwaggerGen(options =>
 // Add services
 builder.Services.AddSingleton<PasswordHasher<AppUser>>();
 builder.Services.AddSingleton<JwtService>();
+builder.Services.AddSingleton<TokenService>();
+builder.Services.AddScoped<EmailService>();
 #endregion
 
 #region Configure the app

@@ -3,6 +3,7 @@ using System;
 using AuthServer.Database;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AuthServer.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260109005259_AlterAppUsersTableAddEmail")]
+    partial class AlterAppUsersTableAddEmail
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -79,35 +82,6 @@ namespace AuthServer.Migrations
                     b.ToTable("app_users", (string)null);
                 });
 
-            modelBuilder.Entity("AuthServer.Database.Models.PasswordResetToken", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid")
-                        .HasColumnName("id");
-
-                    b.Property<Guid>("AppUserId")
-                        .HasColumnType("uuid")
-                        .HasColumnName("app_user_id");
-
-                    b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone")
-                        .HasColumnName("expires_at");
-
-                    b.Property<string>("TokenHash")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("token_hash");
-
-                    b.HasKey("Id")
-                        .HasName("pk_password_reset_tokens");
-
-                    b.HasIndex("AppUserId")
-                        .HasDatabaseName("ix_password_reset_tokens_app_user_id");
-
-                    b.ToTable("password_reset_tokens", (string)null);
-                });
-
             modelBuilder.Entity("AuthServer.Database.Models.UserSession", b =>
                 {
                     b.Property<Guid>("Id")
@@ -130,18 +104,6 @@ namespace AuthServer.Migrations
                         .HasDatabaseName("ix_user_sessions_app_user_id");
 
                     b.ToTable("user_sessions", (string)null);
-                });
-
-            modelBuilder.Entity("AuthServer.Database.Models.PasswordResetToken", b =>
-                {
-                    b.HasOne("AuthServer.Database.Models.AppUser", "AppUser")
-                        .WithMany()
-                        .HasForeignKey("AppUserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired()
-                        .HasConstraintName("fk_password_reset_tokens_app_users_app_user_id");
-
-                    b.Navigation("AppUser");
                 });
 
             modelBuilder.Entity("AuthServer.Database.Models.UserSession", b =>

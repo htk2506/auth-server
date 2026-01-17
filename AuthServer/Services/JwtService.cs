@@ -24,6 +24,13 @@ namespace AuthServer.Services
             _publicKey = new RsaSecurityKey(rsaPublic);
         }
 
+        /// <summary>
+        /// Generates a JWT.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="jti"></param>
+        /// <param name="expiration"></param>
+        /// <returns>The JWT.</returns>
         public string GenerateJwt(string userId, string jti, DateTimeOffset expiration)
         {
             var claims = new[]
@@ -45,6 +52,12 @@ namespace AuthServer.Services
             return new JwtSecurityTokenHandler().WriteToken(token);
         }
 
+        /// <summary>
+        /// Validates a JWT.
+        /// </summary>
+        /// <param name="token"></param>
+        /// <param name="jwt"></param>
+        /// <returns>True if JWT is valid and false otherwise.</returns>
         public bool ValidateJwt(string token, out JwtSecurityToken? jwt)
         {
             var validationParameters = new TokenValidationParameters

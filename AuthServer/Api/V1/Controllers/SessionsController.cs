@@ -7,6 +7,7 @@ using AuthServer.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace AuthServer.Api.V1.Controllers
@@ -42,7 +43,7 @@ namespace AuthServer.Api.V1.Controllers
             {
                 // Attempt to get the user
                 string username = requestBody.Username.ToLower();
-                AppUser? user = _dbContext.AppUsers.FirstOrDefault(x => x.Username.Equals(username));
+                AppUser? user = await _dbContext.AppUsers.FirstOrDefaultAsync(x => x.Username.Equals(username));
                 if (user == null) { return Unauthorized("User not found."); }
 
                 // Check the password hash
@@ -64,7 +65,7 @@ namespace AuthServer.Api.V1.Controllers
                 if (!ModelState.IsValid) { return BadRequest(Utils.GetModelErrors(ModelState)); }
 
                 // Save session to database
-                _dbContext.UserSessions.Add(session);
+                await _dbContext.UserSessions.AddAsync(session);
                 await _dbContext.SaveChangesAsync();
 
                 // Generate a session token with user ID as subject and session ID as JTI
@@ -89,7 +90,7 @@ namespace AuthServer.Api.V1.Controllers
             {
                 // Get the session
                 string sessionId = User.FindFirstValue(ClaimTypes.Authentication) ?? "";
-                UserSession? session = _dbContext.UserSessions.Find(Guid.Parse(sessionId));
+                UserSession? session = await _dbContext.UserSessions.FindAsync(Guid.Parse(sessionId));
                 if (session == null) { return BadRequest("Session not found."); }
 
                 // Remove session from database

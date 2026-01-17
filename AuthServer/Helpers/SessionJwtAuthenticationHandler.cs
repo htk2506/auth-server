@@ -2,6 +2,7 @@
 using AuthServer.Database.Models;
 using AuthServer.Services;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
@@ -43,9 +44,9 @@ namespace AuthServer.Helpers
             if (!isTokenValid || jwt == null) { return AuthenticateResult.Fail("Invalid token."); }
 
             // Verify JWT is for an active and unexpired session
-            UserSession? session = _dbContext.UserSessions.FirstOrDefault(x => x.Id == Guid.Parse(jwt.Id) && DateTimeOffset.UtcNow < x.ExpiresAt);
+            UserSession? session = await _dbContext.UserSessions.FirstOrDefaultAsync(x => x.Id == Guid.Parse(jwt.Id) && DateTimeOffset.UtcNow < x.ExpiresAt);
             if (session == null) { return AuthenticateResult.Fail("No active session found."); }
-            _dbContext.UserSessions.Entry(session).Reference(x => x.AppUser).Load();
+            await _dbContext.UserSessions.Entry(session).Reference(x => x.AppUser).LoadAsync();
 
             // Verify session belongs to same user as JWT
             if (session.AppUser.Id.ToString() != jwt.Subject) { return AuthenticateResult.Fail("Session doesn't belong to user."); }
