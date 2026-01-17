@@ -88,6 +88,7 @@ builder.Services.AddSwaggerGen(options =>
 // Add services
 builder.Services.AddSingleton<PasswordHasher<AppUser>>();
 builder.Services.AddSingleton<JwtService>();
+builder.Services.AddSingleton<TokenService>();
 builder.Services.AddScoped<EmailService>();
 #endregion
 
