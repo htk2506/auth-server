@@ -22,15 +22,16 @@ namespace AuthServer.Services
         /// <returns>The token.</returns>
         public string GenerateToken()
         {
-            using (RandomNumberGenerator rng = RandomNumberGenerator.Create())
+            string allowed = "0123456789ABCDEFGHJKMNPQRSTVWXYZ";
+            int tokenLength = 9;
+            char[] randomChars = new char[tokenLength];
+
+            for (int i = 0; i < tokenLength; i++)
             {
-                byte[] tokenData = new byte[32];
-                rng.GetBytes(tokenData);
-                string base64Str = Convert.ToBase64String(tokenData);
-                
-                // Replace non-alphanumeric characters
-                return Regex.Replace(base64Str, @"[\W]", "");
+                randomChars[i] = allowed[RandomNumberGenerator.GetInt32(0, allowed.Length)];
             }
+
+            return new string(randomChars);
         }
 
         /// <summary>
