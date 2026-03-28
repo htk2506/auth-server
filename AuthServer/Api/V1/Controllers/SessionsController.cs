@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using AuthServer.Api.V1.Dto;
 using AuthServer.Api.V1.Dto.Sessions.Login;
 using AuthServer.Database;
 using AuthServer.Database.Models;
@@ -70,12 +71,15 @@ namespace AuthServer.Api.V1.Controllers
             string sessionToken = _jwtService.GenerateJwt(user.Id.ToString(), session.Id.ToString(), expiration);
 
             // Return token 
-            return Ok(new LoginUserResponseBody { SessionToken = sessionToken });
+            return Ok(new LoginUserResponseBody
+            {
+                SessionToken = sessionToken
+            });
         }
 
         [Authorize]
         [HttpPost("logout")]
-        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(MessageResponseBody), StatusCodes.Status200OK)]
         public async Task<IActionResult> Logout()
         {
             // Get the session
@@ -88,7 +92,10 @@ namespace AuthServer.Api.V1.Controllers
             await _dbContext.SaveChangesAsync();
 
             // Return token 
-            return Ok("Logout successful.");
+            return Ok(new MessageResponseBody
+            {
+                Message = "Logout successful."
+            });
         }
     }
 }

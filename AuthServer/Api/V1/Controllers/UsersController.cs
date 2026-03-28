@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using AuthServer.Api.V1.Dto;
 using AuthServer.Api.V1.Dto.Users.Create;
 using AuthServer.Api.V1.Dto.Users.Get;
 using AuthServer.Api.V1.Dto.Users.PasswordReset;
@@ -147,7 +148,7 @@ namespace AuthServer.Api.V1.Controllers
 
         [Authorize]
         [HttpDelete("me")]
-        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(MessageResponseBody), StatusCodes.Status200OK)]
         public async Task<IActionResult> DeleteUser()
         {
             // Get the user
@@ -171,14 +172,17 @@ namespace AuthServer.Api.V1.Controllers
             await _dbContext.SaveChangesAsync();
 
             // Return success
-            return Ok(true);
+            return Ok(new MessageResponseBody
+            {
+                Message = "User deleted."
+            });
         }
         #endregion
 
         #region v1/users/me/password
         [Authorize]
         [HttpPut("me/password")]
-        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(MessageResponseBody), StatusCodes.Status200OK)]
         public async Task<IActionResult> UpdatePassword([FromBody] UpdateUserPasswordRequestBody requestBody)
         {
             // Get the user
@@ -204,13 +208,16 @@ namespace AuthServer.Api.V1.Controllers
             await EndSessionsOfUser(user);
 
             // Return success
-            return Ok(true);
+            return Ok(new MessageResponseBody
+            {
+                Message = "Password has been updated."
+            });
         }
         #endregion
 
         #region v1/users/password-reset-request
         [HttpPost("password-reset-request")]
-        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(MessageResponseBody), StatusCodes.Status200OK)]
         public async Task<IActionResult> StartPasswordReset([FromBody] StartPasswordResetRequestBody requestBody)
         {
             // Get the user the email belongs to
@@ -237,13 +244,16 @@ namespace AuthServer.Api.V1.Controllers
             await _emailService.SendPasswordResetTokenEmail(existingUser, token);
 
             // Return success
-            return Ok("Email sent.");
+            return Ok(new MessageResponseBody
+            {
+                Message = "Email sent."
+            });
         }
         #endregion
 
         #region v1/users/password-reset
         [HttpPost("password-reset")]
-        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(MessageResponseBody), StatusCodes.Status200OK)]
         public async Task<IActionResult> ResetPassword([FromBody] PasswordResetRequestBody requestBody)
         {
             // Get the user for the request
@@ -278,7 +288,10 @@ namespace AuthServer.Api.V1.Controllers
             await EndSessionsOfUser(existingUser);
 
             // Return success
-            return Ok(true);
+            return Ok(new MessageResponseBody
+            {
+                Message = "Password has been reset."
+            });
         }
         #endregion
 
