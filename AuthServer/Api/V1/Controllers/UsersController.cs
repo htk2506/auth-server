@@ -258,7 +258,7 @@ namespace AuthServer.Api.V1.Controllers
         {
             // Get the user the email belongs to
             AppUser? existingUser = await _dbContext.AppUsers.FirstOrDefaultAsync(x => x.Email == requestBody.Email.ToLower());
-            if (existingUser == null) { return Problem(statusCode: StatusCodes.Status400BadRequest, detail: "User not found."); }
+            if (existingUser == null) { return Problem(statusCode: StatusCodes.Status400BadRequest, detail: "Invalid credentials."); }
 
             // Get list of unexpired password reset tokens that belong to the user
             List<PasswordResetToken> passwordResetTokens = await _dbContext.PasswordResetTokens
@@ -268,7 +268,7 @@ namespace AuthServer.Api.V1.Controllers
             // Check if passed in token matches any of the token hashes 
             PasswordResetToken? validPasswordResetToken = passwordResetTokens
                 .Find(x => _tokenService.VerifyHashedToken(existingUser, x.TokenHash, requestBody.PasswordResetToken));
-            if (validPasswordResetToken == null) { return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid password reset token."); }
+            if (validPasswordResetToken == null) { return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid credentials."); }
 
             // Set new password
             existingUser.PasswordHash = _passwordHasher.HashPassword(existingUser, requestBody.NewPassword);
