@@ -15,21 +15,6 @@ namespace AuthServer.Services
             _configuration = configuration;
         }
 
-        public async Task SendTestEmail(string recipientName, string recipientEmailAddress)
-        {
-            var email = new MimeMessage();
-            email.From.Add(new MailboxAddress(_configuration["Email:SenderName"], _configuration["Email:SenderEmailAddress"]));
-            email.To.Add(new MailboxAddress(recipientName, recipientEmailAddress));
-
-            email.Subject = "Test Email";
-            email.Body = new TextPart(MimeKit.Text.TextFormat.Html)
-            {
-                Text = "<p>Hello world</p>"
-            };
-
-            await SendEmailViaSmtp(email);
-        }
-
         /// <summary>
         /// Sends a user an email with a token for resetting their password.
         /// </summary>
@@ -56,7 +41,9 @@ namespace AuthServer.Services
                 {
                     Id = user.Id,
                     Username = user.Username,
-                    PasswordResetToken = token
+                    Email = user.Email,
+                    PasswordResetToken = token,
+                    Message = $"Token expires in {_configuration.GetValue<int>("PasswordResetToken:Minutes")} minutes."
                 }, Utils.DefaultJsonSerializerOptions)
             };
 
