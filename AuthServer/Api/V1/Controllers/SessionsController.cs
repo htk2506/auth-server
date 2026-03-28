@@ -42,11 +42,11 @@ namespace AuthServer.Api.V1.Controllers
             // Attempt to get the user
             string username = requestBody.Username.ToLower();
             AppUser? user = await _dbContext.AppUsers.FirstOrDefaultAsync(x => x.Username.Equals(username));
-            if (user == null) { return Unauthorized("User not found."); }
+            if (user == null) { return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid credentials."); }
 
             // Check the password hash
             PasswordVerificationResult passwordVerificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, requestBody.Password);
-            if (passwordVerificationResult != PasswordVerificationResult.Success) { return Unauthorized("Invalid credentials."); }
+            if (passwordVerificationResult != PasswordVerificationResult.Success) { return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid credentials."); }
 
             // Calculate the expiration timestamp 
             DateTimeOffset expiration = DateTimeOffset.UtcNow.AddDays(_configuration.GetValue<int>("Jwt:SessionDays"));
@@ -60,7 +60,7 @@ namespace AuthServer.Api.V1.Controllers
 
             // Validate the session model
             TryValidateModel(session);
-            if (!ModelState.IsValid) { return BadRequest(Utils.GetModelErrors(ModelState)); }
+            if (!ModelState.IsValid) { return Problem(statusCode: StatusCodes.Status400BadRequest, detail: Utils.GetModelErrors(ModelState)); }
 
             // Save session to database
             await _dbContext.UserSessions.AddAsync(session);
@@ -81,7 +81,7 @@ namespace AuthServer.Api.V1.Controllers
             // Get the session
             string sessionId = User.FindFirstValue(ClaimTypes.Authentication) ?? "";
             UserSession? session = await _dbContext.UserSessions.FindAsync(Guid.Parse(sessionId));
-            if (session == null) { return BadRequest("Session not found."); }
+            if (session == null) { return Problem(statusCode: StatusCodes.Status400BadRequest, detail: "Session not found."); }
 
             // Remove session from database
             _dbContext.UserSessions.Remove(session);

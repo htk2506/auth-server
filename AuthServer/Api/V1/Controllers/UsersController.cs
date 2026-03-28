@@ -47,10 +47,10 @@ namespace AuthServer.Api.V1.Controllers
         public async Task<IActionResult> CreateUser([FromBody] CreateUserRequestBody requestBody)
         {
             // Check if username already taken 
-            if (await IsUsernameTaken(requestBody.Username)) { return BadRequest("Username not available."); }
+            if (await IsUsernameTaken(requestBody.Username)) { return Problem(statusCode: StatusCodes.Status400BadRequest, detail: "Username not available."); }
 
             // Check if email already taken 
-            if (await IsEmailTaken(requestBody.Email)) { return BadRequest("Email not available."); }
+            if (await IsEmailTaken(requestBody.Email)) { return Problem(statusCode: StatusCodes.Status400BadRequest, detail: "Email not available."); }
 
             // Create user to store
             AppUser user = new AppUser
@@ -63,7 +63,7 @@ namespace AuthServer.Api.V1.Controllers
 
             // Validate the user model
             TryValidateModel(user);
-            if (!ModelState.IsValid) { return BadRequest(Utils.GetModelErrors(ModelState)); }
+            if (!ModelState.IsValid) { return Problem(statusCode: StatusCodes.Status400BadRequest, detail: Utils.GetModelErrors(ModelState)); }
 
             // Save user to database
             await _dbContext.AppUsers.AddAsync(user);
@@ -89,7 +89,7 @@ namespace AuthServer.Api.V1.Controllers
             // Get the user
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
             AppUser? user = await _dbContext.AppUsers.FindAsync(Guid.Parse(userId));
-            if (user == null) { return BadRequest("User not found."); }
+            if (user == null) { return Problem(statusCode: StatusCodes.Status400BadRequest, detail: "User not found."); }
 
             // Return success
             return Ok(new GetUserResponseBody
@@ -109,18 +109,18 @@ namespace AuthServer.Api.V1.Controllers
             // Get the user
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
             AppUser? user = await _dbContext.AppUsers.FindAsync(Guid.Parse(userId));
-            if (user == null) { return BadRequest("User not found."); }
+            if (user == null) { return Problem(statusCode: StatusCodes.Status400BadRequest, detail: "User not found."); }
 
             // Check if new username already taken
             if (!user.Username.ToLower().Equals(requestBody.Username.ToLower()))
             {
-                if (await IsUsernameTaken(requestBody.Username)) { return BadRequest("Username not available."); }
+                if (await IsUsernameTaken(requestBody.Username)) { return Problem(statusCode: StatusCodes.Status400BadRequest, detail: "Username not available."); }
             }
 
             // Check if new email already taken
             if (!(requestBody.Email == null || requestBody.Email.ToLower() == user.Email?.ToLower()))
             {
-                if (await IsEmailTaken(requestBody.Email)) { return BadRequest("Email not available."); }
+                if (await IsEmailTaken(requestBody.Email)) { return Problem(statusCode: StatusCodes.Status400BadRequest, detail: "Email not available."); }
             }
 
             // Modify the user
@@ -130,7 +130,7 @@ namespace AuthServer.Api.V1.Controllers
 
             // Validate the user model
             TryValidateModel(user);
-            if (!ModelState.IsValid) { return BadRequest(Utils.GetModelErrors(ModelState)); }
+            if (!ModelState.IsValid) { return Problem(statusCode: StatusCodes.Status400BadRequest, detail: Utils.GetModelErrors(ModelState)); }
 
             // Save changes to the database
             await _dbContext.SaveChangesAsync();
@@ -153,7 +153,7 @@ namespace AuthServer.Api.V1.Controllers
             // Get the user
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
             AppUser? user = await _dbContext.AppUsers.FindAsync(Guid.Parse(userId));
-            if (user == null) { return BadRequest("User not found."); }
+            if (user == null) { return Problem(statusCode: StatusCodes.Status400BadRequest, detail: "User not found."); }
 
             // Generate a new username for the deleted user
             string newUsername;
@@ -184,18 +184,18 @@ namespace AuthServer.Api.V1.Controllers
             // Get the user
             string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
             AppUser? user = await _dbContext.AppUsers.FindAsync(Guid.Parse(userId));
-            if (user == null) { return BadRequest("User not found."); }
+            if (user == null) { return Problem(statusCode: StatusCodes.Status400BadRequest, detail: "User not found."); }
 
             // Verify old password is correct
             PasswordVerificationResult passwordVerificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, requestBody.CurrentPassword);
-            if (passwordVerificationResult != PasswordVerificationResult.Success) { return Unauthorized("Invalid credentials."); }
+            if (passwordVerificationResult != PasswordVerificationResult.Success) { return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid credentials."); }
 
             // Modify the user
             user.PasswordHash = _passwordHasher.HashPassword(user, requestBody.NewPassword);
 
             // Validate the user model
             TryValidateModel(user);
-            if (!ModelState.IsValid) { return BadRequest(Utils.GetModelErrors(ModelState)); }
+            if (!ModelState.IsValid) { return Problem(statusCode: StatusCodes.Status400BadRequest, detail: Utils.GetModelErrors(ModelState)); }
 
             // Save changes to the database
             await _dbContext.SaveChangesAsync();
@@ -215,7 +215,7 @@ namespace AuthServer.Api.V1.Controllers
         {
             // Get the user the email belongs to
             AppUser? existingUser = await _dbContext.AppUsers.FirstOrDefaultAsync(x => x.Email == requestBody.Email.ToLower());
-            if (existingUser == null) { return BadRequest("User not found."); }
+            if (existingUser == null) { return Problem(statusCode: StatusCodes.Status400BadRequest, detail: "User not found."); }
 
             // Generate the password reset token and its hash
             string token = _tokenService.GenerateToken();
@@ -229,7 +229,7 @@ namespace AuthServer.Api.V1.Controllers
                 ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(_configuration.GetValue<int>("PasswordResetToken:Minutes"))
             };
             TryValidateModel(passwordResetToken);
-            if (!ModelState.IsValid) { return BadRequest(Utils.GetModelErrors(ModelState)); }
+            if (!ModelState.IsValid) { return Problem(statusCode: StatusCodes.Status400BadRequest, detail: Utils.GetModelErrors(ModelState)); }
             await _dbContext.PasswordResetTokens.AddAsync(passwordResetToken);
             await _dbContext.SaveChangesAsync();
 
@@ -248,7 +248,7 @@ namespace AuthServer.Api.V1.Controllers
         {
             // Get the user for the request
             AppUser? existingUser = await _dbContext.AppUsers.FindAsync(requestBody.Id);
-            if (existingUser == null) { return BadRequest("User not found."); }
+            if (existingUser == null) { return Problem(statusCode: StatusCodes.Status400BadRequest, detail: "User not found."); }
 
             // Get list of unexpired password reset tokens that belong to the user
             List<PasswordResetToken> passwordResetTokens = await _dbContext.PasswordResetTokens
@@ -258,17 +258,17 @@ namespace AuthServer.Api.V1.Controllers
             // Check if passed in token matches any of the token hashes 
             PasswordResetToken? validPasswordResetToken = passwordResetTokens
                 .Find(x => _tokenService.VerifyHashedToken(existingUser, x.TokenHash, requestBody.PasswordResetToken));
-            if (validPasswordResetToken == null) { return Unauthorized("Invalid password reset token."); }
+            if (validPasswordResetToken == null) { return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid password reset token."); }
 
             // Set new password
             existingUser.PasswordHash = _passwordHasher.HashPassword(existingUser, requestBody.NewPassword);
             TryValidateModel(existingUser);
-            if (!ModelState.IsValid) { return BadRequest(Utils.GetModelErrors(ModelState)); }
+            if (!ModelState.IsValid) { return Problem(statusCode: StatusCodes.Status400BadRequest, detail: Utils.GetModelErrors(ModelState)); }
 
             // Delete other password reset tokens
             List<PasswordResetToken> otherPasswordResetTokens = await _dbContext.PasswordResetTokens
-                .Where(x => x.AppUser == existingUser)
-                .ToListAsync();
+            .Where(x => x.AppUser == existingUser)
+            .ToListAsync();
             _dbContext.PasswordResetTokens.RemoveRange(otherPasswordResetTokens);
 
             // Save changes
