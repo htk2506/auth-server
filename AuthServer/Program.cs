@@ -4,6 +4,7 @@ using AuthServer.Database.Models;
 using AuthServer.Helpers;
 using AuthServer.Services;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -17,6 +18,22 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("Database")).UseSnakeCaseNamingConvention();
+});
+
+// Configure problem details
+builder.Services.AddProblemDetails(options =>
+{
+    options.CustomizeProblemDetails = context =>
+    {
+        IExceptionHandlerPathFeature? exceptionHandler = context.HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+        if (exceptionHandler != null)
+        {
+            // Add info from exceptions
+            Exception error = exceptionHandler.Error;
+            context.ProblemDetails.Type = exceptionHandler.Error.GetType().Name;
+            context.ProblemDetails.Detail = exceptionHandler.Error.Message;
+        }
+    };
 });
 
 // Add API controllers
@@ -96,17 +113,14 @@ builder.Services.AddScoped<EmailService>();
 #region Configure the app
 var app = builder.Build();
 
-// For development environment
-if (app.Environment.IsDevelopment())
+// Add Swagger UI
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    // Add Swagger UI
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-        options.SwaggerEndpoint("/swagger/v2/swagger.json", "v2");
-    });
-}
+    options.RoutePrefix = string.Empty;
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+    options.SwaggerEndpoint("/swagger/v2/swagger.json", "v2");
+});
 
 // Add HTTPS redirection if there's an HTTPS URL
 string urls = builder.WebHost.GetSetting(WebHostDefaults.ServerUrlsKey) ?? "";
@@ -114,6 +128,12 @@ if (urls.ToLower().Contains("https"))
 {
     app.UseHttpsRedirection();
 }
+
+// Catch exceptions
+app.UseExceptionHandler();
+
+// Enable problem details to be returned when error response is otherwise empty
+app.UseStatusCodePages();
 
 // Add authentication and authorization
 app.UseAuthentication();

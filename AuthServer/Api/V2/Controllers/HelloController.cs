@@ -1,4 +1,5 @@
 ﻿using Asp.Versioning;
+using AuthServer.Api.V2.Dto;
 using Microsoft.AspNetCore.Mvc;
 
 namespace AuthServer.Api.V2.Controllers
@@ -9,10 +10,13 @@ namespace AuthServer.Api.V2.Controllers
     public class HelloController : ControllerBase
     {
         [HttpGet("unprotected")]
-        [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(MessageResponseBody), StatusCodes.Status200OK)]
         public IActionResult Unprotected()
         {
-            return Ok("Hello World! This is V2!");
+            return Ok(new MessageResponseBody
+            {
+                Message = "Hello World! This is V2!"
+            });
         }
     }
 }

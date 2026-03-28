@@ -27,8 +27,8 @@ namespace AuthServer.Helpers
         /// Extracts a list of errors from a model state.
         /// </summary>
         /// <param name="modelState">The ModelState from a controller.</param>
-        /// <returns>List of error strings.</returns>
-        public static List<string> GetModelErrors(ModelStateDictionary modelState)
+        /// <returns>A string of errors.</returns>
+        public static string GetModelErrors(ModelStateDictionary modelState)
         {
             var modelErrors = new List<string>();
             foreach (var modelStateEntry in modelState.Values)
@@ -38,7 +38,7 @@ namespace AuthServer.Helpers
                     modelErrors.Add(modelError.ErrorMessage);
                 }
             }
-            return modelErrors;
+            return String.Join(", ", modelErrors);
         }
     }
 }
