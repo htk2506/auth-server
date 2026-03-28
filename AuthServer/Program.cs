@@ -113,17 +113,14 @@ builder.Services.AddScoped<EmailService>();
 #region Configure the app
 var app = builder.Build();
 
-// For development environment
-if (app.Environment.IsDevelopment())
+// Add Swagger UI
+app.UseSwagger();
+app.UseSwaggerUI(options =>
 {
-    // Add Swagger UI
-    app.UseSwagger();
-    app.UseSwaggerUI(options =>
-    {
-        options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-        options.SwaggerEndpoint("/swagger/v2/swagger.json", "v2");
-    });
-}
+    options.RoutePrefix = string.Empty;
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+    options.SwaggerEndpoint("/swagger/v2/swagger.json", "v2");
+});
 
 // Add HTTPS redirection if there's an HTTPS URL
 string urls = builder.WebHost.GetSetting(WebHostDefaults.ServerUrlsKey) ?? "";
