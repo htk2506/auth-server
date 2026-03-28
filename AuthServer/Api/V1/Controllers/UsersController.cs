@@ -46,45 +46,37 @@ namespace AuthServer.Api.V1.Controllers
         [ProducesResponseType(typeof(CreateUserResponseBody), StatusCodes.Status200OK)]
         public async Task<IActionResult> CreateUser([FromBody] CreateUserRequestBody requestBody)
         {
-            try
+            // Check if username already taken 
+            if (await IsUsernameTaken(requestBody.Username)) { return BadRequest("Username not available."); }
+
+            // Check if email already taken 
+            if (await IsEmailTaken(requestBody.Email)) { return BadRequest("Email not available."); }
+
+            // Create user to store
+            AppUser user = new AppUser
             {
-                // Check if username already taken 
-                if (await IsUsernameTaken(requestBody.Username)) { return BadRequest("Username not available."); }
+                Username = requestBody.Username.ToLower(),
+                Email = requestBody.Email?.ToLower(),
+                Note = requestBody.Note,
+            };
+            user.PasswordHash = _passwordHasher.HashPassword(user, requestBody.Password);
 
-                // Check if email already taken 
-                if (await IsEmailTaken(requestBody.Email)) { return BadRequest("Email not available."); }
+            // Validate the user model
+            TryValidateModel(user);
+            if (!ModelState.IsValid) { return BadRequest(Utils.GetModelErrors(ModelState)); }
 
-                // Create user to store
-                AppUser user = new AppUser
-                {
-                    Username = requestBody.Username.ToLower(),
-                    Email = requestBody.Email?.ToLower(),
-                    Note = requestBody.Note,
-                };
-                user.PasswordHash = _passwordHasher.HashPassword(user, requestBody.Password);
+            // Save user to database
+            await _dbContext.AppUsers.AddAsync(user);
+            await _dbContext.SaveChangesAsync();
 
-                // Validate the user model
-                TryValidateModel(user);
-                if (!ModelState.IsValid) { return BadRequest(Utils.GetModelErrors(ModelState)); }
-
-                // Save user to database
-                await _dbContext.AppUsers.AddAsync(user);
-                await _dbContext.SaveChangesAsync();
-
-                // Return success
-                return Ok(new CreateUserResponseBody
-                {
-                    Id = user.Id,
-                    Username = user.Username,
-                    Email = user.Email,
-                    Note = user.Note,
-                });
-            }
-            catch (Exception ex)
+            // Return success
+            return Ok(new CreateUserResponseBody
             {
-                Console.Error.WriteLine(ex);
-                return Problem("Error occurred.");
-            }
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                Note = user.Note,
+            });
         }
         #endregion
 
@@ -94,27 +86,19 @@ namespace AuthServer.Api.V1.Controllers
         [ProducesResponseType(typeof(GetUserResponseBody), StatusCodes.Status200OK)]
         public async Task<IActionResult> GetUser()
         {
-            try
-            {
-                // Get the user
-                string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                AppUser? user = await _dbContext.AppUsers.FindAsync(Guid.Parse(userId));
-                if (user == null) { return BadRequest("User not found."); }
+            // Get the user
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            AppUser? user = await _dbContext.AppUsers.FindAsync(Guid.Parse(userId));
+            if (user == null) { return BadRequest("User not found."); }
 
-                // Return success
-                return Ok(new GetUserResponseBody
-                {
-                    Id = user.Id,
-                    Email = user.Email,
-                    Username = user.Username,
-                    Note = user.Note,
-                });
-            }
-            catch (Exception ex)
+            // Return success
+            return Ok(new GetUserResponseBody
             {
-                Console.Error.WriteLine(ex);
-                return Problem("Error occurred.");
-            }
+                Id = user.Id,
+                Email = user.Email,
+                Username = user.Username,
+                Note = user.Note,
+            });
         }
 
         [Authorize]
@@ -122,51 +106,43 @@ namespace AuthServer.Api.V1.Controllers
         [ProducesResponseType(typeof(UpdateUserResponseBody), StatusCodes.Status200OK)]
         public async Task<IActionResult> UpdateUser([FromBody] UpdateUserRequestBody requestBody)
         {
-            try
+            // Get the user
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            AppUser? user = await _dbContext.AppUsers.FindAsync(Guid.Parse(userId));
+            if (user == null) { return BadRequest("User not found."); }
+
+            // Check if new username already taken
+            if (!user.Username.ToLower().Equals(requestBody.Username.ToLower()))
             {
-                // Get the user
-                string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                AppUser? user = await _dbContext.AppUsers.FindAsync(Guid.Parse(userId));
-                if (user == null) { return BadRequest("User not found."); }
-
-                // Check if new username already taken
-                if (!user.Username.ToLower().Equals(requestBody.Username.ToLower()))
-                {
-                    if (await IsUsernameTaken(requestBody.Username)) { return BadRequest("Username not available."); }
-                }
-
-                // Check if new email already taken
-                if (!(requestBody.Email == null || requestBody.Email.ToLower() == user.Email?.ToLower()))
-                {
-                    if (await IsEmailTaken(requestBody.Email)) { return BadRequest("Email not available."); }
-                }
-
-                // Modify the user
-                user.Username = requestBody.Username.ToLower();
-                user.Email = requestBody.Email?.ToLower();
-                user.Note = requestBody.Note;
-
-                // Validate the user model
-                TryValidateModel(user);
-                if (!ModelState.IsValid) { return BadRequest(Utils.GetModelErrors(ModelState)); }
-
-                // Save changes to the database
-                await _dbContext.SaveChangesAsync();
-
-                // Return success
-                return Ok(new UpdateUserResponseBody
-                {
-                    Id = user.Id,
-                    Username = user.Username,
-                    Email = user.Email,
-                    Note = user.Note,
-                });
+                if (await IsUsernameTaken(requestBody.Username)) { return BadRequest("Username not available."); }
             }
-            catch (Exception ex)
+
+            // Check if new email already taken
+            if (!(requestBody.Email == null || requestBody.Email.ToLower() == user.Email?.ToLower()))
             {
-                Console.Error.WriteLine(ex);
-                return Problem("Error occurred.");
+                if (await IsEmailTaken(requestBody.Email)) { return BadRequest("Email not available."); }
             }
+
+            // Modify the user
+            user.Username = requestBody.Username.ToLower();
+            user.Email = requestBody.Email?.ToLower();
+            user.Note = requestBody.Note;
+
+            // Validate the user model
+            TryValidateModel(user);
+            if (!ModelState.IsValid) { return BadRequest(Utils.GetModelErrors(ModelState)); }
+
+            // Save changes to the database
+            await _dbContext.SaveChangesAsync();
+
+            // Return success
+            return Ok(new UpdateUserResponseBody
+            {
+                Id = user.Id,
+                Username = user.Username,
+                Email = user.Email,
+                Note = user.Note,
+            });
         }
 
         [Authorize]
@@ -174,36 +150,28 @@ namespace AuthServer.Api.V1.Controllers
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         public async Task<IActionResult> DeleteUser()
         {
-            try
+            // Get the user
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            AppUser? user = await _dbContext.AppUsers.FindAsync(Guid.Parse(userId));
+            if (user == null) { return BadRequest("User not found."); }
+
+            // Generate a new username for the deleted user
+            string newUsername;
+            do
             {
-                // Get the user
-                string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                AppUser? user = await _dbContext.AppUsers.FindAsync(Guid.Parse(userId));
-                if (user == null) { return BadRequest("User not found."); }
+                newUsername = $"deleted_{DateTimeOffset.UtcNow.Ticks.ToString("x").ToLower()}";
+            } while (await IsUsernameTaken(newUsername));
+            user.Username = newUsername;
 
-                // Generate a new username for the deleted user
-                string newUsername;
-                do
-                {
-                    newUsername = $"deleted_{DateTimeOffset.UtcNow.Ticks.ToString("x").ToLower()}";
-                } while (await IsUsernameTaken(newUsername));
-                user.Username = newUsername;
+            // Remove the email
+            user.Email = null;
 
-                // Remove the email
-                user.Email = null;
+            // Delete the user
+            _dbContext.AppUsers.Remove(user);
+            await _dbContext.SaveChangesAsync();
 
-                // Delete the user
-                _dbContext.AppUsers.Remove(user);
-                await _dbContext.SaveChangesAsync();
-
-                // Return success
-                return Ok(true);
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine(ex);
-                return Problem("Error occurred.");
-            }
+            // Return success
+            return Ok(true);
         }
         #endregion
 
@@ -213,38 +181,30 @@ namespace AuthServer.Api.V1.Controllers
         [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
         public async Task<IActionResult> UpdatePassword([FromBody] UpdateUserPasswordRequestBody requestBody)
         {
-            try
-            {
-                // Get the user
-                string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
-                AppUser? user = await _dbContext.AppUsers.FindAsync(Guid.Parse(userId));
-                if (user == null) { return BadRequest("User not found."); }
+            // Get the user
+            string userId = User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "";
+            AppUser? user = await _dbContext.AppUsers.FindAsync(Guid.Parse(userId));
+            if (user == null) { return BadRequest("User not found."); }
 
-                // Verify old password is correct
-                PasswordVerificationResult passwordVerificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, requestBody.CurrentPassword);
-                if (passwordVerificationResult != PasswordVerificationResult.Success) { return Unauthorized("Invalid credentials."); }
+            // Verify old password is correct
+            PasswordVerificationResult passwordVerificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, requestBody.CurrentPassword);
+            if (passwordVerificationResult != PasswordVerificationResult.Success) { return Unauthorized("Invalid credentials."); }
 
-                // Modify the user
-                user.PasswordHash = _passwordHasher.HashPassword(user, requestBody.NewPassword);
+            // Modify the user
+            user.PasswordHash = _passwordHasher.HashPassword(user, requestBody.NewPassword);
 
-                // Validate the user model
-                TryValidateModel(user);
-                if (!ModelState.IsValid) { return BadRequest(Utils.GetModelErrors(ModelState)); }
+            // Validate the user model
+            TryValidateModel(user);
+            if (!ModelState.IsValid) { return BadRequest(Utils.GetModelErrors(ModelState)); }
 
-                // Save changes to the database
-                await _dbContext.SaveChangesAsync();
+            // Save changes to the database
+            await _dbContext.SaveChangesAsync();
 
-                // Log user out of their sessions
-                await EndSessionsOfUser(user);
+            // Log user out of their sessions
+            await EndSessionsOfUser(user);
 
-                // Return success
-                return Ok(true);
-            }
-            catch (Exception ex)
-            {
-                Console.Error.WriteLine(ex);
-                return Problem("Error occurred.");
-            }
+            // Return success
+            return Ok(true);
         }
         #endregion
 
