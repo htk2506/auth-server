@@ -4,8 +4,9 @@ namespace AuthServer.Api.V1.Dto.Users.PasswordReset
 {
     public class PasswordResetRequestBody
     {
+        [EmailAddress]
         [Required]
-        public Guid Id { get; set; }
+        public string Email { get; set; } = null!;
 
         [Required]
         public string PasswordResetToken { get; set; } = null!;
