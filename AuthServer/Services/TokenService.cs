@@ -31,7 +31,7 @@ namespace AuthServer.Services
                 randomChars[i] = allowed[RandomNumberGenerator.GetInt32(0, allowed.Length)];
             }
 
-            return new string(randomChars);
+            return new string(randomChars).ToUpper();
         }
 
         /// <summary>

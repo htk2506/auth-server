@@ -267,7 +267,7 @@ namespace AuthServer.Api.V1.Controllers
 
             // Check if passed in token matches any of the token hashes 
             PasswordResetToken? validPasswordResetToken = passwordResetTokens
-                .Find(x => _tokenService.VerifyHashedToken(existingUser, x.TokenHash, requestBody.PasswordResetToken));
+                .Find(x => _tokenService.VerifyHashedToken(existingUser, x.TokenHash, requestBody.PasswordResetToken.ToUpper()));
             if (validPasswordResetToken == null) { return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid credentials."); }
 
             // Set new password
