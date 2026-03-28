@@ -4,6 +4,7 @@ using AuthServer.Database.Models;
 using AuthServer.Helpers;
 using AuthServer.Services;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
@@ -17,6 +18,22 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseNpgsql(builder.Configuration.GetConnectionString("Database")).UseSnakeCaseNamingConvention();
+});
+
+// Configure problem details
+builder.Services.AddProblemDetails(options =>
+{
+    options.CustomizeProblemDetails = context =>
+    {
+        IExceptionHandlerPathFeature? exceptionHandler = context.HttpContext.Features.Get<IExceptionHandlerPathFeature>();
+        if (exceptionHandler != null)
+        {
+            // Add info from exceptions
+            Exception error = exceptionHandler.Error;
+            context.ProblemDetails.Type = exceptionHandler.Error.GetType().Name;
+            context.ProblemDetails.Detail = exceptionHandler.Error.Message;
+        }
+    };
 });
 
 // Add API controllers
@@ -114,6 +131,12 @@ if (urls.ToLower().Contains("https"))
 {
     app.UseHttpsRedirection();
 }
+
+// Catch exceptions
+app.UseExceptionHandler();
+
+// Enable problem details to be returned when error response is otherwise empty
+app.UseStatusCodePages();
 
 // Add authentication and authorization
 app.UseAuthentication();
