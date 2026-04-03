@@ -103,6 +103,9 @@ builder.Services.AddSwaggerGen(options =>
     });
 });
 
+// Add health check
+builder.Services.AddHealthChecks();
+
 // Add services
 builder.Services.AddSingleton<PasswordHasher<AppUser>>();
 builder.Services.AddSingleton<JwtService>();
@@ -139,7 +142,10 @@ app.UseStatusCodePages();
 app.UseAuthentication();
 app.UseAuthorization();
 
-// Add endpoints for controller actions
+// Map the health check endpoint
+app.MapHealthChecks("/healthz");
+
+// Map endpoints for controller actions
 app.MapControllers();
 #endregion
 
