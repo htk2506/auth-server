@@ -36,16 +36,27 @@ builder.Services.AddProblemDetails(options =>
     };
 });
 
-// Add API controllers
-builder.Services.AddControllers()
-    .AddJsonOptions(options =>
+// Add routing
+builder.Services.AddRouting(options => options.LowercaseUrls = true);
+
+// Add CORS policy
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAllOrigins", policy =>
     {
-        // Configure JSON options
-        options.JsonSerializerOptions.WriteIndented = true;
-        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
-        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        policy.AllowAnyOrigin()
+              .AllowAnyHeader()
+              .AllowAnyMethod();
     });
+});
+
+// Add authentication
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = "SessionJwtScheme";
+    options.DefaultChallengeScheme = "SessionJwtScheme";
+})
+    .AddScheme<AuthenticationSchemeOptions, SessionJwtAuthenticationHandler>("SessionJwtScheme", null);
 
 // Configure API endpoint versioning
 builder.Services.AddApiVersioning(options =>
@@ -60,17 +71,6 @@ builder.Services.AddApiVersioning(options =>
         options.GroupNameFormat = "'v'VVV";
         options.SubstituteApiVersionInUrl = true;
     });
-
-// Add routing
-builder.Services.AddRouting(options => options.LowercaseUrls = true);
-
-// Add authentication
-builder.Services.AddAuthentication(options =>
-{
-    options.DefaultAuthenticateScheme = "SessionJwtScheme";
-    options.DefaultChallengeScheme = "SessionJwtScheme";
-})
-    .AddScheme<AuthenticationSchemeOptions, SessionJwtAuthenticationHandler>("SessionJwtScheme", null);
 
 // Add Swagger doc generation
 builder.Services.AddSwaggerGen(options =>
@@ -106,6 +106,17 @@ builder.Services.AddSwaggerGen(options =>
 // Add health check
 builder.Services.AddHealthChecks();
 
+// Add API controllers
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        // Configure JSON options
+        options.JsonSerializerOptions.WriteIndented = true;
+        options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
+
 // Add services
 builder.Services.AddSingleton<PasswordHasher<AppUser>>();
 builder.Services.AddSingleton<JwtService>();
@@ -116,14 +127,8 @@ builder.Services.AddScoped<EmailService>();
 #region Configure the app
 var app = builder.Build();
 
-// Use Swagger UI
-app.UseSwagger();
-app.UseSwaggerUI(options =>
-{
-    options.RoutePrefix = string.Empty;
-    options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-    options.SwaggerEndpoint("/swagger/v2/swagger.json", "v2");
-});
+// Catch exceptions
+app.UseExceptionHandler();
 
 // Use HTTPS redirection if there's an HTTPS URL
 string urls = builder.WebHost.GetSetting(WebHostDefaults.ServerUrlsKey) ?? "";
@@ -132,15 +137,27 @@ if (urls.ToLower().Contains("https"))
     app.UseHttpsRedirection();
 }
 
-// Catch exceptions
-app.UseExceptionHandler();
-
 // Enable problem details to be returned when error response is otherwise empty
 app.UseStatusCodePages();
+
+// Route to correct endpoint
+app.UseRouting();
+
+// Use CORS policy
+app.UseCors("AllowAllOrigins");
 
 // Use authentication and authorization
 app.UseAuthentication();
 app.UseAuthorization();
+
+// Use Swagger UI
+app.UseSwagger();
+app.UseSwaggerUI(options =>
+{
+    options.RoutePrefix = string.Empty;
+    options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+    options.SwaggerEndpoint("/swagger/v2/swagger.json", "v2");
+});
 
 // Map the health check endpoint
 app.MapHealthChecks("/healthz");
