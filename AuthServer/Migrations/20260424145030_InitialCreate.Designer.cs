@@ -12,15 +12,15 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace AuthServer.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20251214000758_CreateModifyTimestampable")]
-    partial class CreateModifyTimestampable
+    [Migration("20260424145030_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.8")
+                .HasAnnotation("ProductVersion", "10.0.7")
                 .HasAnnotation("Relational:MaxIdentifierLength", 63);
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
@@ -39,6 +39,10 @@ namespace AuthServer.Migrations
                     b.Property<DateTimeOffset?>("DeletedAt")
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("deleted_at");
+
+                    b.Property<string>("Email")
+                        .HasColumnType("text")
+                        .HasColumnName("email");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean")
@@ -67,11 +71,44 @@ namespace AuthServer.Migrations
                     b.HasKey("Id")
                         .HasName("pk_app_users");
 
+                    b.HasIndex("Email")
+                        .IsUnique()
+                        .HasDatabaseName("ix_app_users_email");
+
                     b.HasIndex("Username")
                         .IsUnique()
                         .HasDatabaseName("ix_app_users_username");
 
                     b.ToTable("app_users", (string)null);
+                });
+
+            modelBuilder.Entity("AuthServer.Database.Models.PasswordResetToken", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid")
+                        .HasColumnName("id");
+
+                    b.Property<Guid>("AppUserId")
+                        .HasColumnType("uuid")
+                        .HasColumnName("app_user_id");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("expires_at");
+
+                    b.Property<string>("TokenHash")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("token_hash");
+
+                    b.HasKey("Id")
+                        .HasName("pk_password_reset_tokens");
+
+                    b.HasIndex("AppUserId")
+                        .HasDatabaseName("ix_password_reset_tokens_app_user_id");
+
+                    b.ToTable("password_reset_tokens", (string)null);
                 });
 
             modelBuilder.Entity("AuthServer.Database.Models.UserSession", b =>
@@ -96,6 +133,18 @@ namespace AuthServer.Migrations
                         .HasDatabaseName("ix_user_sessions_app_user_id");
 
                     b.ToTable("user_sessions", (string)null);
+                });
+
+            modelBuilder.Entity("AuthServer.Database.Models.PasswordResetToken", b =>
+                {
+                    b.HasOne("AuthServer.Database.Models.AppUser", "AppUser")
+                        .WithMany()
+                        .HasForeignKey("AppUserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired()
+                        .HasConstraintName("fk_password_reset_tokens_app_users_app_user_id");
+
+                    b.Navigation("AppUser");
                 });
 
             modelBuilder.Entity("AuthServer.Database.Models.UserSession", b =>
