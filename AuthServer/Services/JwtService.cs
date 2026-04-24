@@ -8,12 +8,14 @@ namespace AuthServer.Services
     public class JwtService
     {
         private readonly IConfiguration _configuration;
+        private readonly ILogger<JwtService> _logger;
         private readonly RsaSecurityKey _privateKey;
         private readonly RsaSecurityKey _publicKey;
 
-        public JwtService(IConfiguration configuration)
+        public JwtService(IConfiguration configuration, ILogger<JwtService> logger)
         {
             _configuration = configuration;
+            _logger = logger;
 
             RSACryptoServiceProvider rsaPrivate = new RSACryptoServiceProvider();
             rsaPrivate.FromXmlString(_configuration["Jwt:PrivateKey"] ?? throw new NullReferenceException("Missing private key"));
@@ -81,7 +83,7 @@ namespace AuthServer.Services
             }
             catch (SecurityTokenValidationException ex)
             {
-                Console.Error.WriteLine(ex);
+                _logger.LogError("Exception: {ex}", ex);
                 jwt = null;
                 return false;
             }
