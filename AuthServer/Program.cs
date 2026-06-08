@@ -115,6 +115,7 @@ builder.Services.AddOpenTelemetry()
     .WithTracing(tracing => tracing
         .AddSource(serviceName)
         .AddAspNetCoreInstrumentation()
+        .AddHttpClientInstrumentation()
         .AddConsoleExporter())
     .WithMetrics(metrics => metrics
         .AddMeter(serviceName)
@@ -146,6 +147,9 @@ builder.Services.AddScoped<EmailService>();
 
 #region Configure the app
 var app = builder.Build();
+
+// Add Trace-ID headers
+app.UseMiddleware<TraceIdMiddleware>();
 
 // Catch exceptions
 app.UseExceptionHandler();
