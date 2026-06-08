@@ -26,8 +26,13 @@ try
     #region Configure the builder
     var builder = WebApplication.CreateBuilder(args);
 
+    string serviceName = builder.Configuration.GetValue<string>("ServiceName") ?? throw new NullReferenceException("Missing ServiceName.");
+    string serviceVersion = builder.Configuration.GetValue<string>("ServiceVersion") ?? throw new NullReferenceException("Missing ServiceVersion.");
+
     // Add Serilog
     builder.Services.AddSerilog((services, loggerConfiguration) => loggerConfiguration
+        .Enrich.WithProperty("ServiceName", serviceName)
+        .Enrich.WithProperty("ServiceVersion", serviceVersion)
         .ReadFrom.Configuration(builder.Configuration)
         .ReadFrom.Services(services));
 
@@ -119,8 +124,6 @@ try
     builder.Services.AddHealthChecks();
 
     // Add OpenTelemetry
-    string serviceName = builder.Configuration.GetValue<string>("ServiceName") ?? throw new NullReferenceException("Missing ServiceName.");
-    string serviceVersion = builder.Configuration.GetValue<string>("ServiceVersion") ?? throw new NullReferenceException("Missing ServiceVersion.");
     builder.Services.AddOpenTelemetry()
         .ConfigureResource(resource => resource.AddService(
             serviceName: serviceName,
