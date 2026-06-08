@@ -58,9 +58,14 @@ namespace AuthServer.Services
         {
             using (var smtp = new SmtpClient())
             {
+                string smtpHost = _configuration.GetValue<string>("Email:SmtpHost") ?? throw new NullReferenceException("Missing Email:SmtpHost.");
+                int smtpPort = _configuration.GetValue<int>("Email:SmtpPort");
+                string smtpUsername = _configuration.GetValue<string>("Email:SmtpUsername") ?? throw new NullReferenceException("Missing Email:SmtpUsername.");
+                string smtpPassword = _configuration.GetValue<string>("Email:SmtpPassword") ?? throw new NullReferenceException("Missing Email:SmtpPassword.");
+
                 // Connect to SMTP server
-                await smtp.ConnectAsync(_configuration["Email:SmtpHost"], _configuration.GetValue<int>("Email:SmtpPort"));
-                await smtp.AuthenticateAsync(_configuration["Email:SmtpUsername"], _configuration["Email:SmtpPassword"]);
+                await smtp.ConnectAsync(smtpHost, smtpPort);
+                await smtp.AuthenticateAsync(smtpUsername, smtpPassword);
 
                 // Send email
                 await smtp.SendAsync(email);
