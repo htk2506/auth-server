@@ -8,6 +8,10 @@ using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
+using OpenTelemetry.Logs;
+using OpenTelemetry.Metrics;
+using OpenTelemetry.Resources;
+using OpenTelemetry.Trace;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -100,6 +104,27 @@ builder.Services.AddSwaggerGen(options =>
 
 // Add health check
 builder.Services.AddHealthChecks();
+
+// Add OpenTelemetry
+string serviceName = builder.Configuration.GetValue<string>("ServiceName") ?? throw new NullReferenceException("Missing ServiceName.");
+string serviceVersion = builder.Configuration.GetValue<string>("ServiceVersion") ?? throw new NullReferenceException("Missing ServiceVersion.");
+builder.Services.AddOpenTelemetry()
+    .ConfigureResource(resource => resource.AddService(
+        serviceName: serviceName,
+        serviceVersion: serviceVersion))
+    .WithTracing(tracing => tracing
+        .AddSource(serviceName)
+        .AddAspNetCoreInstrumentation()
+        .AddConsoleExporter())
+    .WithMetrics(metrics => metrics
+        .AddMeter(serviceName)
+        .AddConsoleExporter());
+
+builder.Logging.AddOpenTelemetry(options => options
+    .SetResourceBuilder(ResourceBuilder.CreateDefault().AddService(
+        serviceName: serviceName,
+        serviceVersion: serviceVersion))
+    .AddConsoleExporter());
 
 // Add API controllers
 builder.Services.AddControllers()
