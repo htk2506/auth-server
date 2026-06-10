@@ -14,6 +14,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
+using Serilog.Exceptions;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -35,6 +36,8 @@ try
     builder.Services.AddSerilog((services, loggerConfiguration) => loggerConfiguration
         .Enrich.WithProperty("ServiceName", serviceName)
         .Enrich.WithProperty("ServiceVersion", serviceVersion)
+        .Enrich.FromLogContext()
+        .Enrich.WithExceptionDetails()
         .Destructure.UsingAttributes()
         .ReadFrom.Configuration(builder.Configuration)
         .ReadFrom.Services(services));
