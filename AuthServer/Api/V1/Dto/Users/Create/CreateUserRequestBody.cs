@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Destructurama.Attributed;
+using System.ComponentModel.DataAnnotations;
 
 namespace AuthServer.Api.V1.Dto.Users.Create
 {
@@ -11,9 +12,11 @@ namespace AuthServer.Api.V1.Dto.Users.Create
         public string Username { get; set; } = null!;
 
         [EmailAddress]
+        [LogMasked]
         public string? Email { get; set; }
 
         [Required]
+        [LogMasked]
         public string Password { get; set; } = null!;
 
         public string Note { get; set; } = string.Empty;

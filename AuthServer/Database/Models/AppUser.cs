@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using Destructurama.Attributed;
 using Microsoft.EntityFrameworkCore;
 
 namespace AuthServer.Database.Models
@@ -17,9 +18,11 @@ namespace AuthServer.Database.Models
         public string Username { get; set; } = null!;
 
         [EmailAddress]
+        [LogMasked]
         public string? Email { get; set; }
 
         [Required]
+        [LogMasked]
         public string PasswordHash { get; set; } = null!;
 
         public string Note { get; set; } = string.Empty;

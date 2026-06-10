@@ -18,18 +18,21 @@ namespace AuthServer.Api.V1.Controllers
     [Route("v{version:apiVersion}/[controller]")]
     public class SessionsController : ControllerBase
     {
+        private readonly ILogger<SessionsController> _logger;
         private readonly IConfiguration _configuration;
         private readonly AppDbContext _dbContext;
         private readonly PasswordHasher<AppUser> _passwordHasher;
         private readonly JwtService _jwtService;
 
         public SessionsController(
+            ILogger<SessionsController> logger,
             IConfiguration configuration,
             AppDbContext dbContext,
             PasswordHasher<AppUser> passwordHasher,
             JwtService jwtService
         )
         {
+            _logger = logger;
             _configuration = configuration;
             _dbContext = dbContext;
             _passwordHasher = passwordHasher;
@@ -40,14 +43,24 @@ namespace AuthServer.Api.V1.Controllers
         [ProducesResponseType(typeof(LoginUserResponseBody), StatusCodes.Status200OK)]
         public async Task<IActionResult> Login([FromBody] LoginUserRequestBody requestBody)
         {
+            _logger.LogInformation("Request received at {@RequestPath}. RequestBody: {@RequestBody}.", Request.Path.Value, requestBody);
+
             // Attempt to get the user
             string username = requestBody.Username.ToLower();
             AppUser? user = await _dbContext.AppUsers.FirstOrDefaultAsync(x => x.Username.Equals(username));
-            if (user == null) { return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid credentials."); }
+            if (user == null)
+            {
+                _logger.LogInformation("Problem StatusCode: {@StatusCode}. Detail: {@Detail}.", StatusCodes.Status401Unauthorized, "Invalid credentials.");
+                return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid credentials.");
+            }
 
             // Check the password hash
             PasswordVerificationResult passwordVerificationResult = _passwordHasher.VerifyHashedPassword(user, user.PasswordHash, requestBody.Password);
-            if (passwordVerificationResult != PasswordVerificationResult.Success) { return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid credentials."); }
+            if (passwordVerificationResult != PasswordVerificationResult.Success)
+            {
+                _logger.LogInformation("Problem StatusCode: {@StatusCode}. Detail: {@Detail}.", StatusCodes.Status401Unauthorized, "Invalid credentials.");
+                return Problem(statusCode: StatusCodes.Status401Unauthorized, detail: "Invalid credentials.");
+            }
 
             // Calculate the expiration timestamp 
             DateTimeOffset expiration = DateTimeOffset.UtcNow.AddDays(_configuration.GetValue<int>("Jwt:SessionDays"));
@@ -61,9 +74,14 @@ namespace AuthServer.Api.V1.Controllers
 
             // Validate the session model
             TryValidateModel(session);
-            if (!ModelState.IsValid) { return Problem(statusCode: StatusCodes.Status400BadRequest, detail: Utils.GetModelErrors(ModelState)); }
+            if (!ModelState.IsValid)
+            {
+                _logger.LogInformation("Problem StatusCode: {@StatusCode}. Detail: {@Detail}.", StatusCodes.Status400BadRequest, Utils.GetModelErrors(ModelState));
+                return Problem(statusCode: StatusCodes.Status400BadRequest, detail: Utils.GetModelErrors(ModelState));
+            }
 
             // Save session to database
+            _logger.LogDebug("Saving user session: {@UserSession}.", session);
             await _dbContext.UserSessions.AddAsync(session);
             await _dbContext.SaveChangesAsync();
 
@@ -71,10 +89,12 @@ namespace AuthServer.Api.V1.Controllers
             string sessionToken = _jwtService.GenerateJwt(user.Id.ToString(), session.Id.ToString(), expiration);
 
             // Return token 
-            return Ok(new LoginUserResponseBody
+            LoginUserResponseBody loginResponseBody = new LoginUserResponseBody
             {
                 SessionToken = sessionToken
-            });
+            };
+            _logger.LogInformation("Response body: {@ResponseBody}.", loginResponseBody);
+            return Ok(loginResponseBody);
         }
 
         [Authorize]
@@ -82,20 +102,29 @@ namespace AuthServer.Api.V1.Controllers
         [ProducesResponseType(typeof(MessageResponseBody), StatusCodes.Status200OK)]
         public async Task<IActionResult> Logout()
         {
+            _logger.LogInformation("Request received at {@RequestPath}.", Request.Path.Value);
+
             // Get the session
             string sessionId = User.FindFirstValue(ClaimTypes.Authentication) ?? "";
             UserSession? session = await _dbContext.UserSessions.FindAsync(Guid.Parse(sessionId));
-            if (session == null) { return Problem(statusCode: StatusCodes.Status400BadRequest, detail: "Session not found."); }
+            if (session == null)
+            {
+                _logger.LogInformation("Problem StatusCode: {@StatusCode}. Detail: {@Detail}.", StatusCodes.Status400BadRequest, "Session not found.");
+                return Problem(statusCode: StatusCodes.Status400BadRequest, detail: "Session not found.");
+            }
 
             // Remove session from database
+            _logger.LogDebug("Deleting user session: {@UserSession}.", session);
             _dbContext.UserSessions.Remove(session);
             await _dbContext.SaveChangesAsync();
 
             // Return token 
-            return Ok(new MessageResponseBody
+            MessageResponseBody messageResponseBody = new MessageResponseBody
             {
                 Message = "Logout successful."
-            });
+            };
+            _logger.LogInformation("Response body: {@ResponseBody}.", messageResponseBody);
+            return Ok(messageResponseBody);
         }
     }
 }
