@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Destructurama.Attributed;
+using System.ComponentModel.DataAnnotations;
 
 namespace AuthServer.Database.Models
 {
@@ -8,6 +9,7 @@ namespace AuthServer.Database.Models
         public Guid Id { get; set; }
 
         [Required]
+        [LogMasked]
         public string TokenHash { get; set; } = null!;
 
         [Required]
