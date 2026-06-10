@@ -3,6 +3,7 @@ using AuthServer.Database;
 using AuthServer.Database.Models;
 using AuthServer.Helpers;
 using AuthServer.Services;
+using Destructurama;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
@@ -34,6 +35,7 @@ try
     builder.Services.AddSerilog((services, loggerConfiguration) => loggerConfiguration
         .Enrich.WithProperty("ServiceName", serviceName)
         .Enrich.WithProperty("ServiceVersion", serviceVersion)
+        .Destructure.UsingAttributes()
         .ReadFrom.Configuration(builder.Configuration)
         .ReadFrom.Services(services));
 

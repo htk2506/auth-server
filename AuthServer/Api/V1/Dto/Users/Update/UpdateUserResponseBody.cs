@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Destructurama.Attributed;
+using System.ComponentModel.DataAnnotations;
 
 namespace AuthServer.Api.V1.Dto.Users.Update
 {
@@ -9,6 +10,7 @@ namespace AuthServer.Api.V1.Dto.Users.Update
         public string Username { get; set; } = null!;
 
         [EmailAddress]
+        [LogMasked]
         public string? Email { get; set; }
 
         public string Note { get; set; } = string.Empty;
