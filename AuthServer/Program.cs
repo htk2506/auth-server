@@ -13,6 +13,7 @@ using OpenTelemetry.Metrics;
 using OpenTelemetry.Resources;
 using OpenTelemetry.Trace;
 using Serilog;
+using System.Security.Claims;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
@@ -162,7 +163,15 @@ try
     app.UseMiddleware<TraceIdMiddleware>();
 
     // Streamline request logging
-    app.UseSerilogRequestLogging();
+    app.UseSerilogRequestLogging(options =>
+    {
+        options.EnrichDiagnosticContext = (diagnosticContext, httpContext) =>
+        {
+            // Add user ID to logs
+            string userId = httpContext.User.Identity?.IsAuthenticated == true ? httpContext.User.FindFirstValue(ClaimTypes.NameIdentifier) ?? "" : "";
+            diagnosticContext.Set("UserId", userId);
+        };
+    });
 
     // Catch exceptions
     app.UseExceptionHandler();
@@ -186,6 +195,9 @@ try
     // Use authentication and authorization
     app.UseAuthentication();
     app.UseAuthorization();
+
+    // Add User ID to log context
+    app.UseMiddleware<UserLogContextMiddleware>();
 
     // Use Swagger UI
     app.UseSwagger();
