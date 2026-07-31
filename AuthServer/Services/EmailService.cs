@@ -37,7 +37,7 @@ namespace AuthServer.Services
             var email = new MimeMessage();
 
             // Set sender and recipient
-            email.From.Add(new MailboxAddress(_configuration["Email:SenderName"], _configuration["Email:SenderEmailAddress"]));
+            email.From.Add(new MailboxAddress(_configuration["Email:SenderName"], _configuration["Email:SenderEmailAddress"] ?? throw new NullReferenceException("Missing Email:SenderEmailAddress.")));
             email.To.Add(new MailboxAddress(user.Username, user.Email));
 
             // Set the subject and body
