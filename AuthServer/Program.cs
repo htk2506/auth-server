@@ -30,8 +30,8 @@ try
     #region Configure the builder
     var builder = WebApplication.CreateBuilder(args);
 
-    string serviceName = builder.Configuration.GetValue<string>("ServiceName") ?? throw new NullReferenceException("Missing ServiceName.");
-    string serviceVersion = builder.Configuration.GetValue<string>("ServiceVersion") ?? throw new NullReferenceException("Missing ServiceVersion.");
+    string serviceName = builder.Configuration.GetValue<string>("ServiceName") ?? throw new InvalidOperationException("Missing ServiceName.");
+    string serviceVersion = builder.Configuration.GetValue<string>("ServiceVersion") ?? throw new InvalidOperationException("Missing ServiceVersion.");
 
     // Add Serilog
     builder.Services.AddSerilog((services, loggerConfiguration) => loggerConfiguration
