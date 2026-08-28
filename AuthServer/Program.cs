@@ -49,21 +49,11 @@ try
         options.UseNpgsql(builder.Configuration.GetConnectionString("Database")).UseSnakeCaseNamingConvention();
     });
 
+    // Add exception handlelr
+    builder.Services.AddExceptionHandler<ExceptionLoggingHandler>();
+
     // Configure problem details
-    builder.Services.AddProblemDetails(options =>
-    {
-        options.CustomizeProblemDetails = context =>
-        {
-            IExceptionHandlerPathFeature? exceptionHandler = context.HttpContext.Features.Get<IExceptionHandlerPathFeature>();
-            if (exceptionHandler != null)
-            {
-                // Add info from exceptions
-                Exception error = exceptionHandler.Error;
-                context.ProblemDetails.Type = exceptionHandler.Error.GetType().Name;
-                context.ProblemDetails.Detail = exceptionHandler.Error.Message;
-            }
-        };
-    });
+    builder.Services.AddProblemDetails();
 
     // Add routing
     builder.Services.AddRouting(options => options.LowercaseUrls = true);
