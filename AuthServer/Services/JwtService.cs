@@ -18,11 +18,11 @@ namespace AuthServer.Services
             _logger = logger;
 
             RSACryptoServiceProvider rsaPrivate = new RSACryptoServiceProvider();
-            rsaPrivate.FromXmlString(_configuration["Jwt:PrivateKey"] ?? throw new NullReferenceException("Missing private key"));
+            rsaPrivate.FromXmlString(_configuration["Jwt:PrivateKey"] ?? throw new InvalidOperationException("Missing Jwt:PrivateKey."));
             _privateKey = new RsaSecurityKey(rsaPrivate);
 
             RSACryptoServiceProvider rsaPublic = new RSACryptoServiceProvider();
-            rsaPublic.FromXmlString(configuration["Jwt:PublicKey"] ?? throw new NullReferenceException("Missing public key"));
+            rsaPublic.FromXmlString(configuration["Jwt:PublicKey"] ?? throw new InvalidOperationException("Missing Jwt:PublicKey."));
             _publicKey = new RsaSecurityKey(rsaPublic);
         }
 
@@ -83,7 +83,7 @@ namespace AuthServer.Services
             }
             catch (SecurityTokenValidationException ex)
             {
-                _logger.LogError("Exception: {ex}", ex);
+                _logger.LogWarning(ex, "Invalid JWT.");
                 jwt = null;
                 return false;
             }

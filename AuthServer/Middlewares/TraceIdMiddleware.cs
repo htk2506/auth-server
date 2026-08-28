@@ -1,6 +1,6 @@
 ﻿using System.Diagnostics;
 
-namespace AuthServer.Helpers
+namespace AuthServer.Middlewares
 {
     public class TraceIdMiddleware
     {

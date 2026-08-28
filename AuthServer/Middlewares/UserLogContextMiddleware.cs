@@ -1,7 +1,7 @@
 ﻿using Serilog.Context;
 using System.Security.Claims;
 
-namespace AuthServer.Helpers
+namespace AuthServer.Middlewares
 {
     public class UserLogContextMiddleware
     {

@@ -2,6 +2,7 @@ using Asp.Versioning;
 using AuthServer.Database;
 using AuthServer.Database.Models;
 using AuthServer.Helpers;
+using AuthServer.Middlewares;
 using AuthServer.Services;
 using Destructurama;
 using Microsoft.AspNetCore.Authentication;
@@ -29,8 +30,8 @@ try
     #region Configure the builder
     var builder = WebApplication.CreateBuilder(args);
 
-    string serviceName = builder.Configuration.GetValue<string>("ServiceName") ?? throw new NullReferenceException("Missing ServiceName.");
-    string serviceVersion = builder.Configuration.GetValue<string>("ServiceVersion") ?? throw new NullReferenceException("Missing ServiceVersion.");
+    string serviceName = builder.Configuration.GetValue<string>("ServiceName") ?? throw new InvalidOperationException("Missing ServiceName.");
+    string serviceVersion = builder.Configuration.GetValue<string>("ServiceVersion") ?? throw new InvalidOperationException("Missing ServiceVersion.");
 
     // Add Serilog
     builder.Services.AddSerilog((services, loggerConfiguration) => loggerConfiguration
@@ -48,21 +49,11 @@ try
         options.UseNpgsql(builder.Configuration.GetConnectionString("Database")).UseSnakeCaseNamingConvention();
     });
 
+    // Add exception handlelr
+    builder.Services.AddExceptionHandler<ExceptionLoggingHandler>();
+
     // Configure problem details
-    builder.Services.AddProblemDetails(options =>
-    {
-        options.CustomizeProblemDetails = context =>
-        {
-            IExceptionHandlerPathFeature? exceptionHandler = context.HttpContext.Features.Get<IExceptionHandlerPathFeature>();
-            if (exceptionHandler != null)
-            {
-                // Add info from exceptions
-                Exception error = exceptionHandler.Error;
-                context.ProblemDetails.Type = exceptionHandler.Error.GetType().Name;
-                context.ProblemDetails.Detail = exceptionHandler.Error.Message;
-            }
-        };
-    });
+    builder.Services.AddProblemDetails();
 
     // Add routing
     builder.Services.AddRouting(options => options.LowercaseUrls = true);

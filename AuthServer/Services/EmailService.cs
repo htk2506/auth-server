@@ -25,19 +25,21 @@ namespace AuthServer.Services
         /// </summary>
         /// <param name="user"></param>
         /// <param name="token"></param>
-        /// <exception cref="NullReferenceException"></exception>
+        /// <exception cref="InvalidOperationException"></exception>
         public async Task SendPasswordResetTokenEmail(AppUser user, string token)
         {
             _logger.LogTrace("Start of {@FunctionName}.", nameof(SendPasswordResetTokenEmail));
 
             // Make sure user has an email
-            if (user.Email == null) { throw new NullReferenceException("User doesn't email address."); }
+            if (user.Email == null) { throw new InvalidOperationException("User doesn't email address."); }
 
             // Construct email
             var email = new MimeMessage();
 
             // Set sender and recipient
-            email.From.Add(new MailboxAddress(_configuration["Email:SenderName"], _configuration["Email:SenderEmailAddress"] ?? throw new NullReferenceException("Missing Email:SenderEmailAddress.")));
+            string emailSenderName = _configuration.GetValue<string>("Email:SenderName") ?? throw new InvalidOperationException("Missing Email:SenderName.");
+            string emailSenderEmailAddress = _configuration.GetValue<string>("Email:SenderEmailAddress") ?? throw new InvalidOperationException("Missing Email:SenderEmailAddress.");
+            email.From.Add(new MailboxAddress(emailSenderName, emailSenderEmailAddress));
             email.To.Add(new MailboxAddress(user.Username, user.Email));
 
             // Set the subject and body
@@ -67,10 +69,10 @@ namespace AuthServer.Services
 
             using (var smtp = new SmtpClient())
             {
-                string smtpHost = _configuration.GetValue<string>("Email:SmtpHost") ?? throw new NullReferenceException("Missing Email:SmtpHost.");
+                string smtpHost = _configuration.GetValue<string>("Email:SmtpHost") ?? throw new InvalidOperationException("Missing Email:SmtpHost.");
                 int smtpPort = _configuration.GetValue<int>("Email:SmtpPort");
-                string smtpUsername = _configuration.GetValue<string>("Email:SmtpUsername") ?? throw new NullReferenceException("Missing Email:SmtpUsername.");
-                string smtpPassword = _configuration.GetValue<string>("Email:SmtpPassword") ?? throw new NullReferenceException("Missing Email:SmtpPassword.");
+                string smtpUsername = _configuration.GetValue<string>("Email:SmtpUsername") ?? throw new InvalidOperationException("Missing Email:SmtpUsername.");
+                string smtpPassword = _configuration.GetValue<string>("Email:SmtpPassword") ?? throw new InvalidOperationException("Missing Email:SmtpPassword.");
 
                 // Connect to SMTP server
                 _logger.LogTrace("Connecting to SMTP server.");
