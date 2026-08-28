@@ -2,6 +2,7 @@ using Asp.Versioning;
 using AuthServer.Database;
 using AuthServer.Database.Models;
 using AuthServer.Helpers;
+using AuthServer.Middlewares;
 using AuthServer.Services;
 using Destructurama;
 using Microsoft.AspNetCore.Authentication;
