@@ -83,7 +83,7 @@ namespace AuthServer.Services
             }
             catch (SecurityTokenValidationException ex)
             {
-                _logger.LogError("Exception: {ex}", ex);
+                _logger.LogWarning(ex, "Invalid JWT.");
                 jwt = null;
                 return false;
             }
