@@ -8,6 +8,7 @@ using AuthServer.Database;
 using AuthServer.Database.Models;
 using AuthServer.Helpers;
 using AuthServer.Services;
+using AuthServer.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -25,7 +26,7 @@ namespace AuthServer.Api.V1.Controllers
         private readonly IConfiguration _configuration;
         private readonly AppDbContext _dbContext;
         private readonly IPasswordHasher<AppUser> _passwordHasher;
-        private readonly EmailService _emailService;
+        private readonly IEmailService _emailService;
         private readonly TokenService _tokenService;
 
         public UsersController(
@@ -33,7 +34,7 @@ namespace AuthServer.Api.V1.Controllers
             IConfiguration configuration,
             AppDbContext dbContext,
             IPasswordHasher<AppUser> passwordHasher,
-            EmailService emailService,
+            IEmailService emailService,
             TokenService tokenService
         )
         {

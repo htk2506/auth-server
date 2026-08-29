@@ -4,9 +4,9 @@ using AuthServer.Database.Models;
 using AuthServer.Helpers;
 using AuthServer.Middlewares;
 using AuthServer.Services;
+using AuthServer.Services.Interfaces;
 using Destructurama;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
@@ -149,7 +149,7 @@ try
     builder.Services.AddSingleton<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
     builder.Services.AddSingleton<JwtService>();
     builder.Services.AddSingleton<TokenService>();
-    builder.Services.AddScoped<EmailService>();
+    builder.Services.AddScoped<IEmailService, EmailService>();
     #endregion
 
     #region Configure the app
