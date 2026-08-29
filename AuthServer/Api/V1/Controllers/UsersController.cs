@@ -7,7 +7,6 @@ using AuthServer.Api.V1.Dto.Users.Update;
 using AuthServer.Database;
 using AuthServer.Database.Models;
 using AuthServer.Helpers;
-using AuthServer.Services;
 using AuthServer.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
@@ -27,7 +26,7 @@ namespace AuthServer.Api.V1.Controllers
         private readonly AppDbContext _dbContext;
         private readonly IPasswordHasher<AppUser> _passwordHasher;
         private readonly IEmailService _emailService;
-        private readonly TokenService _tokenService;
+        private readonly ITokenService _tokenService;
 
         public UsersController(
             ILogger<UsersController> logger,
@@ -35,7 +34,7 @@ namespace AuthServer.Api.V1.Controllers
             AppDbContext dbContext,
             IPasswordHasher<AppUser> passwordHasher,
             IEmailService emailService,
-            TokenService tokenService
+            ITokenService tokenService
         )
         {
             _logger = logger;
