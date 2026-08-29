@@ -1,18 +1,15 @@
 ﻿using AuthServer.Database.Models;
 using Microsoft.AspNetCore.Identity;
 using System.Security.Cryptography;
-using System.Text.RegularExpressions;
 
 namespace AuthServer.Services
 {
     public class TokenService
     {
-        private readonly IConfiguration _configuration;
         private readonly PasswordHasher<AppUser> _passwordHasher;
 
-        public TokenService(IConfiguration configuration, PasswordHasher<AppUser> passwordHasher)
+        public TokenService(PasswordHasher<AppUser> passwordHasher)
         {
-            _configuration = configuration;
             _passwordHasher = passwordHasher;
         }
 
