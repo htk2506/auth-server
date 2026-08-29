@@ -1,6 +1,5 @@
 using Asp.Versioning;
 using AuthServer.Database;
-using AuthServer.Database.Models;
 using AuthServer.Helpers;
 using AuthServer.Middlewares;
 using AuthServer.Services;
@@ -146,7 +145,7 @@ try
         });
 
     // Add services
-    builder.Services.AddSingleton<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
+    builder.Services.AddSingleton(typeof(IPasswordHasher<>), typeof(PasswordHasher<>));
     builder.Services.AddSingleton<IJwtService, JwtService>();
     builder.Services.AddSingleton<ITokenService, TokenService>();
     builder.Services.AddScoped<IEmailService, EmailService>();
