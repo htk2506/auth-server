@@ -147,7 +147,7 @@ try
 
     // Add services
     builder.Services.AddSingleton<IPasswordHasher<AppUser>, PasswordHasher<AppUser>>();
-    builder.Services.AddSingleton<JwtService>();
+    builder.Services.AddSingleton<IJwtService, JwtService>();
     builder.Services.AddSingleton<TokenService>();
     builder.Services.AddScoped<IEmailService, EmailService>();
     #endregion
