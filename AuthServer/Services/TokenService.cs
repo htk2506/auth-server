@@ -6,9 +6,9 @@ namespace AuthServer.Services
 {
     public class TokenService
     {
-        private readonly PasswordHasher<AppUser> _passwordHasher;
+        private readonly IPasswordHasher<AppUser> _passwordHasher;
 
-        public TokenService(PasswordHasher<AppUser> passwordHasher)
+        public TokenService(IPasswordHasher<AppUser> passwordHasher)
         {
             _passwordHasher = passwordHasher;
         }

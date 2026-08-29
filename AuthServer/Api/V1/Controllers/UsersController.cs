@@ -24,7 +24,7 @@ namespace AuthServer.Api.V1.Controllers
         private readonly ILogger<UsersController> _logger;
         private readonly IConfiguration _configuration;
         private readonly AppDbContext _dbContext;
-        private readonly PasswordHasher<AppUser> _passwordHasher;
+        private readonly IPasswordHasher<AppUser> _passwordHasher;
         private readonly EmailService _emailService;
         private readonly TokenService _tokenService;
 
@@ -32,7 +32,7 @@ namespace AuthServer.Api.V1.Controllers
             ILogger<UsersController> logger,
             IConfiguration configuration,
             AppDbContext dbContext,
-            PasswordHasher<AppUser> passwordHasher,
+            IPasswordHasher<AppUser> passwordHasher,
             EmailService emailService,
             TokenService tokenService
         )

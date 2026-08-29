@@ -21,14 +21,14 @@ namespace AuthServer.Api.V1.Controllers
         private readonly ILogger<SessionsController> _logger;
         private readonly IConfiguration _configuration;
         private readonly AppDbContext _dbContext;
-        private readonly PasswordHasher<AppUser> _passwordHasher;
+        private readonly IPasswordHasher<AppUser> _passwordHasher;
         private readonly JwtService _jwtService;
 
         public SessionsController(
             ILogger<SessionsController> logger,
             IConfiguration configuration,
             AppDbContext dbContext,
-            PasswordHasher<AppUser> passwordHasher,
+            IPasswordHasher<AppUser> passwordHasher,
             JwtService jwtService
         )
         {
