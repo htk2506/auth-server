@@ -4,11 +4,11 @@ using AuthServer.Api.V1.Dto.Sessions.Login;
 using AuthServer.Database;
 using AuthServer.Database.Models;
 using AuthServer.Helpers;
+using AuthServer.Repositories.Interfaces;
 using AuthServer.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
 namespace AuthServer.Api.V1.Controllers
@@ -21,6 +21,7 @@ namespace AuthServer.Api.V1.Controllers
         private readonly ILogger<SessionsController> _logger;
         private readonly IConfiguration _configuration;
         private readonly AppDbContext _dbContext;
+        private readonly IAppUserRepository _appUserRepository;
         private readonly IPasswordHasher<AppUser> _passwordHasher;
         private readonly IJwtService _jwtService;
 
@@ -28,6 +29,7 @@ namespace AuthServer.Api.V1.Controllers
             ILogger<SessionsController> logger,
             IConfiguration configuration,
             AppDbContext dbContext,
+            IAppUserRepository appUserRepository,
             IPasswordHasher<AppUser> passwordHasher,
             IJwtService jwtService
         )
@@ -35,6 +37,7 @@ namespace AuthServer.Api.V1.Controllers
             _logger = logger;
             _configuration = configuration;
             _dbContext = dbContext;
+            _appUserRepository = appUserRepository;
             _passwordHasher = passwordHasher;
             _jwtService = jwtService;
         }
@@ -46,8 +49,7 @@ namespace AuthServer.Api.V1.Controllers
             _logger.LogInformation("Request received at {@RequestPath}. RequestBody: {@RequestBody}.", Request.Path.Value, requestBody);
 
             // Attempt to get the user
-            string username = requestBody.Username.ToLower();
-            AppUser? user = await _dbContext.AppUsers.FirstOrDefaultAsync(x => x.Username.Equals(username));
+            AppUser? user = await _appUserRepository.FindByUsernameAsync(requestBody.Username);
             if (user == null)
             {
                 _logger.LogInformation("Problem StatusCode: {@StatusCode}. Detail: {@Detail}.", StatusCodes.Status401Unauthorized, "Invalid credentials.");
