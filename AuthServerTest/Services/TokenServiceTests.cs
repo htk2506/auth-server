@@ -28,7 +28,7 @@ namespace AuthServerTest.Services
             public class When
             {
                 [Fact]
-                public void Then()
+                public void Then_1_plus_1_equals_2()
                 {
                     // Arrange
                     Harness harness = BuildSut();
@@ -37,8 +37,8 @@ namespace AuthServerTest.Services
                     harness.Sut.GenerateToken();
 
                     // Assert
-                    int x = 1;
-                    x.Should().Be(1);
+                    int x = 1 + 1;
+                    x.Should().Be(2);
                 }
             }
         }
