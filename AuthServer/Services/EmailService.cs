@@ -1,12 +1,13 @@
 ﻿using AuthServer.Database.Models;
 using AuthServer.Helpers;
+using AuthServer.Services.Interfaces;
 using MailKit.Net.Smtp;
 using MimeKit;
 using System.Text.Json;
 
 namespace AuthServer.Services
 {
-    public class EmailService
+    public class EmailService : IEmailService
     {
         private readonly ILogger<EmailService> _logger;
         private readonly IConfiguration _configuration;
@@ -20,12 +21,6 @@ namespace AuthServer.Services
             _configuration = configuration;
         }
 
-        /// <summary>
-        /// Sends a user an email with a token for resetting their password.
-        /// </summary>
-        /// <param name="user"></param>
-        /// <param name="token"></param>
-        /// <exception cref="InvalidOperationException"></exception>
         public async Task SendPasswordResetTokenEmail(AppUser user, string token)
         {
             _logger.LogTrace("Start of {@FunctionName}.", nameof(SendPasswordResetTokenEmail));

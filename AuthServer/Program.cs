@@ -1,12 +1,11 @@
 using Asp.Versioning;
 using AuthServer.Database;
-using AuthServer.Database.Models;
 using AuthServer.Helpers;
 using AuthServer.Middlewares;
 using AuthServer.Services;
+using AuthServer.Services.Interfaces;
 using Destructurama;
 using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
@@ -146,10 +145,10 @@ try
         });
 
     // Add services
-    builder.Services.AddSingleton<PasswordHasher<AppUser>>();
-    builder.Services.AddSingleton<JwtService>();
-    builder.Services.AddSingleton<TokenService>();
-    builder.Services.AddScoped<EmailService>();
+    builder.Services.AddSingleton(typeof(IPasswordHasher<>), typeof(PasswordHasher<>));
+    builder.Services.AddSingleton<IJwtService, JwtService>();
+    builder.Services.AddSingleton<ITokenService, TokenService>();
+    builder.Services.AddScoped<IEmailService, EmailService>();
     #endregion
 
     #region Configure the app

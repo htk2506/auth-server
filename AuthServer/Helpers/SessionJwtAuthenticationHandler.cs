@@ -1,6 +1,6 @@
 ﻿using AuthServer.Database;
 using AuthServer.Database.Models;
-using AuthServer.Services;
+using AuthServer.Services.Interfaces;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
@@ -12,14 +12,14 @@ namespace AuthServer.Helpers
 {
     public class SessionJwtAuthenticationHandler : AuthenticationHandler<AuthenticationSchemeOptions>
     {
-        private readonly JwtService _jwtService;
+        private readonly IJwtService _jwtService;
         private readonly AppDbContext _dbContext;
 
         public SessionJwtAuthenticationHandler(
             IOptionsMonitor<AuthenticationSchemeOptions> options,
             ILoggerFactory logger,
             UrlEncoder encoder,
-            JwtService jwtService,
+            IJwtService jwtService,
             AppDbContext dbContext
         ) : base(options, logger, encoder)
         {

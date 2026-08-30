@@ -4,7 +4,7 @@ using AuthServer.Api.V1.Dto.Sessions.Login;
 using AuthServer.Database;
 using AuthServer.Database.Models;
 using AuthServer.Helpers;
-using AuthServer.Services;
+using AuthServer.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -21,15 +21,15 @@ namespace AuthServer.Api.V1.Controllers
         private readonly ILogger<SessionsController> _logger;
         private readonly IConfiguration _configuration;
         private readonly AppDbContext _dbContext;
-        private readonly PasswordHasher<AppUser> _passwordHasher;
-        private readonly JwtService _jwtService;
+        private readonly IPasswordHasher<AppUser> _passwordHasher;
+        private readonly IJwtService _jwtService;
 
         public SessionsController(
             ILogger<SessionsController> logger,
             IConfiguration configuration,
             AppDbContext dbContext,
-            PasswordHasher<AppUser> passwordHasher,
-            JwtService jwtService
+            IPasswordHasher<AppUser> passwordHasher,
+            IJwtService jwtService
         )
         {
             _logger = logger;
