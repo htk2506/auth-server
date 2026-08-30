@@ -2,6 +2,8 @@ using Asp.Versioning;
 using AuthServer.Database;
 using AuthServer.Helpers;
 using AuthServer.Middlewares;
+using AuthServer.Repositories;
+using AuthServer.Repositories.Interfaces;
 using AuthServer.Services;
 using AuthServer.Services.Interfaces;
 using Destructurama;
@@ -143,6 +145,9 @@ try
             options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
             options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
         });
+
+    // Add repositories
+    builder.Services.AddScoped<IAppUserRepository, AppUserRepository>();
 
     // Add services
     builder.Services.AddSingleton(typeof(IPasswordHasher<>), typeof(PasswordHasher<>));
