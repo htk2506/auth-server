@@ -297,43 +297,19 @@ namespace AuthServer.Api.V1.Controllers
         {
             _logger.LogInformation("Request received at {@RequestPath}. RequestBody: {@RequestBody}.", Request.Path.Value, requestBody);
 
-            // Get the user the email belongs to
-            AppUser? existingUser = await _dbContext.AppUsers.FirstOrDefaultAsync(x => x.Email == requestBody.Email.ToLower());
-            if (existingUser == null)
+            try
             {
-                _logger.LogInformation("Problem StatusCode: {@StatusCode}. Detail: {@Detail}.", StatusCodes.Status400BadRequest, "User not found.");
-                return Problem(statusCode: StatusCodes.Status400BadRequest, detail: "User not found.");
+                await ProcessPasswordResetRequest(requestBody);
+            }
+            catch (Exception exception)
+            {
+                _logger.LogError(exception, "Error occurred. Exception type: {ExceptionType} and exception message: {ExceptionMessage}.", exception.GetType(), exception.Message);
             }
 
-            // Generate the password reset token and its hash
-            string token = _tokenService.GenerateToken();
-            string tokenHash = _tokenService.GenerateTokenHash(existingUser, token);
-
-            // Save to the database to use later
-            PasswordResetToken passwordResetToken = new PasswordResetToken
-            {
-                AppUser = existingUser,
-                TokenHash = tokenHash,
-                ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(_configuration.GetValue<int>("PasswordResetToken:Minutes"))
-            };
-            TryValidateModel(passwordResetToken);
-            if (!ModelState.IsValid)
-            {
-                _logger.LogInformation("Problem StatusCode: {@StatusCode}. Detail: {@Detail}.", StatusCodes.Status400BadRequest, Utils.GetModelErrors(ModelState));
-                return Problem(statusCode: StatusCodes.Status400BadRequest, detail: Utils.GetModelErrors(ModelState));
-            }
-
-            _logger.LogDebug("Saving password reset token: {@PasswordResetToken}.", passwordResetToken);
-            await _dbContext.PasswordResetTokens.AddAsync(passwordResetToken);
-            await _dbContext.SaveChangesAsync();
-
-            // Send the email
-            await _emailService.SendPasswordResetTokenEmail(existingUser, token);
-
-            // Return success
+            // Return a message whether or not the email was sent or not
             MessageResponseBody messageResponseBody = new MessageResponseBody
             {
-                Message = "Email sent."
+                Message = "A reset token will be sent to your email if it is associated with an account."
             };
             _logger.LogInformation("Response body: {@ResponseBody}.", messageResponseBody);
             return Ok(messageResponseBody);
@@ -398,13 +374,54 @@ namespace AuthServer.Api.V1.Controllers
             {
                 Message = "Password has been reset."
             };
-
             _logger.LogInformation("Response body: {@ResponseBody}.", messageResponseBody);
             return Ok(messageResponseBody);
         }
         #endregion
 
         #region private functions
+        /// <summary>
+        /// Processes a request to reset a password by sending the reset token email.
+        /// </summary>
+        /// <param name="requestBody"></param>
+        /// <returns>True if an attempt to send the reset token email was made and false otherwise.</returns>
+        private async Task<bool> ProcessPasswordResetRequest(StartPasswordResetRequestBody requestBody)
+        {
+            // Get the user the email belongs to
+            AppUser? existingUser = await _dbContext.AppUsers.FirstOrDefaultAsync(x => x.Email == requestBody.Email.ToLower());
+            if (existingUser == null)
+            {
+                _logger.LogInformation("User not found.");
+                return false;
+            }
+
+            // Generate the password reset token and its hash
+            string token = _tokenService.GenerateToken();
+            string tokenHash = _tokenService.GenerateTokenHash(existingUser, token);
+
+            // Save to the database to use later
+            PasswordResetToken passwordResetToken = new PasswordResetToken
+            {
+                AppUser = existingUser,
+                TokenHash = tokenHash,
+                ExpiresAt = DateTimeOffset.UtcNow.AddMinutes(_configuration.GetValue<int>("PasswordResetToken:Minutes"))
+            };
+            TryValidateModel(passwordResetToken);
+            if (!ModelState.IsValid)
+            {
+                _logger.LogError("Model state invalid: {@Detail}.", Utils.GetModelErrors(ModelState));
+                return false;
+            }
+
+            _logger.LogDebug("Saving password reset token.");
+            await _dbContext.PasswordResetTokens.AddAsync(passwordResetToken);
+            await _dbContext.SaveChangesAsync();
+
+            // Send the email
+            await _emailService.SendPasswordResetTokenEmail(existingUser, token);
+            return true;
+        }
+
         /// <summary>
         /// Checks if the username is taken by an existing or soft-deleted user.
         /// </summary>
