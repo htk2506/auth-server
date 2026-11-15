@@ -1,6 +1,7 @@
 ﻿using AuthServer.Database.Models;
 using AuthServer.Helpers;
 using AuthServer.Services.Interfaces;
+using MailKit;
 using MailKit.Net.Smtp;
 using MimeKit;
 using System.Text.Json;
